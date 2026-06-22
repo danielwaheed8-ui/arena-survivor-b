@@ -14,3 +14,4 @@
 2026-06-22T20:10:26Z | CHILD-DONE | child-3 | combat.js+audio.js present, tests green
 2026-06-22T20:10:26Z | MERGE | orchestrator | integration (index.html/main.js) wired to all modules; verifying
 2026-06-22T20:16:08Z | TEST | orchestrator | node --check all 6 modules clean; 25/25 deterministic core tests green (real entities.js+combat.js via core.js); audio import-safe; render facade+symbols verified; window.__game wired (ready/getState/step/spawnEnemyAt/setPlayerPos/fire/restart)
+2026-06-22T20:16:08Z | DONE | orchestrator | merged playable Arena Survivor committed; all 8 files present; deterministic logic verified green
