@@ -1,0 +1,16 @@
+2026-06-22T20:01:37Z | START | orchestrator | exp3 Arena Survivor; scaffold + git init
+2026-06-22T20:04:50Z | PLAN | orchestrator | logic/render/audio split via CONTRACT.md. child-1=render.js (all visuals/three/post/particles); child-2=entities.js (player+enemies+waves+boss, three-free deterministic); child-3=combat.js+audio.js (projectiles/collision/powerups/upgrades + websynth). Orchestrator owns index.html/main loop/state/input/HUD/menus/window.__game. Cut: distinct files, shared state only via contract-defined plain object.
+2026-06-22T20:04:50Z | SPAWN | orchestrator | child-1 window opened (cd-prefixed, absolute brief path)
+2026-06-22T20:04:50Z | SPAWN | orchestrator | child-2 window opened (cd-prefixed, absolute brief path)
+2026-06-22T20:04:50Z | SPAWN | orchestrator | child-3 window opened (cd-prefixed, absolute brief path)
+2026-06-22T20:05:16Z | START | child-1 | building render.js
+2026-06-22T20:05:22Z | START | child-2 | building entities.js
+2026-06-22T20:05:22Z | START | child-3 | building combat.js + audio.js
+2026-06-22T20:07:02Z | DONE | child-2 | entities.js built + node logic test green
+2026-06-22T20:07:37Z | DONE | child-3 | combat.js+audio.js built + node tests green
+2026-06-22T20:09:38Z | DONE | child-1 | render.js built + node --check clean
+2026-06-22T20:10:26Z | CHILD-DONE | child-1 | render.js (36KB) present, node --check clean
+2026-06-22T20:10:26Z | CHILD-DONE | child-2 | entities.js present, logic test green
+2026-06-22T20:10:26Z | CHILD-DONE | child-3 | combat.js+audio.js present, tests green
+2026-06-22T20:10:26Z | MERGE | orchestrator | integration (index.html/main.js) wired to all modules; verifying
+2026-06-22T20:16:08Z | TEST | orchestrator | node --check all 6 modules clean; 25/25 deterministic core tests green (real entities.js+combat.js via core.js); audio import-safe; render facade+symbols verified; window.__game wired (ready/getState/step/spawnEnemyAt/setPlayerPos/fire/restart)

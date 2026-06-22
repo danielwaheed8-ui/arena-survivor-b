@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+<title>Arena Survivor</title>
+<style>
+  :root {
+    --accent: #38e8ff;
+    --accent2: #ff3e9a;
+    --good: #4dff9e;
+    --warn: #ffd24d;
+    --bg0: #05060d;
+    --panel: rgba(10, 14, 28, 0.82);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg0); }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    color: #eaf2ff; cursor: crosshair; user-select: none;
+  }
+  #app { position: fixed; inset: 0; }
+  canvas { display: block; }
+
+  /* ---------- HUD ---------- */
+  #hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+  #hud.hidden { display: none; }
+  .hud-top {
+    position: absolute; top: 18px; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 0 26px;
+  }
+  .stat { font-weight: 700; letter-spacing: 0.5px; text-shadow: 0 2px 10px #000; }
+  .stat .label { font-size: 11px; opacity: 0.6; text-transform: uppercase; letter-spacing: 2px; }
+  .stat .value { font-size: 26px; }
+  #scoreBox .value { color: var(--accent); }
+  #waveBox { text-align: center; }
+  #waveBox .value { color: var(--accent2); }
+  #highBox { text-align: right; }
+  #highBox .value { color: var(--warn); font-size: 18px; }
+
+  .hud-bottom { position: absolute; left: 26px; bottom: 24px; width: 320px; }
+  .bar-wrap {
+    height: 22px; border-radius: 12px; background: rgba(255,255,255,0.08);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12); overflow: hidden; position: relative;
+  }
+  #healthFill {
+    height: 100%; width: 100%;
+    background: linear-gradient(90deg, #ff5a5a, #ff9a5a 60%, var(--good));
+    transition: width 0.18s ease;
+  }
+  .bar-wrap .bar-label {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; text-shadow: 0 1px 4px #000; letter-spacing: 1px;
+  }
+  #cooldownWrap { height: 6px; margin-top: 8px; border-radius: 4px; background: rgba(255,255,255,0.08); overflow: hidden; }
+  #cooldownFill { height: 100%; width: 100%; background: var(--accent); transition: width 0.05s linear; }
+  #buffRow { display: flex; gap: 8px; margin-top: 10px; }
+  .buff { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 10px; background: rgba(56,232,255,0.16); color: var(--accent); }
+
+  #crosshair {
+    position: fixed; width: 26px; height: 26px; pointer-events: none; z-index: 11;
+    transform: translate(-50%, -50%); mix-blend-mode: screen;
+  }
+  #crosshair::before, #crosshair::after {
+    content: ""; position: absolute; background: var(--accent); box-shadow: 0 0 6px var(--accent);
+  }
+  #crosshair::before { left: 50%; top: 0; width: 2px; height: 100%; transform: translateX(-50%); }
+  #crosshair::after { top: 50%; left: 0; height: 2px; width: 100%; transform: translateY(-50%); }
+
+  /* floating damage / score numbers */
+  #floaters { position: fixed; inset: 0; pointer-events: none; z-index: 12; overflow: hidden; }
+  .floater {
+    position: absolute; font-weight: 800; font-size: 16px; text-shadow: 0 2px 6px #000;
+    animation: floatUp 0.9s ease-out forwards; white-space: nowrap;
+  }
+  @keyframes floatUp {
+    0% { opacity: 0; transform: translate(-50%, 0) scale(0.6); }
+    20% { opacity: 1; transform: translate(-50%, -10px) scale(1.1); }
+    100% { opacity: 0; transform: translate(-50%, -52px) scale(1); }
+  }
+
+  /* ---------- Overlays ---------- */
+  .overlay {
+    position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+    background: radial-gradient(circle at 50% 35%, rgba(20,26,52,0.72), rgba(3,4,10,0.94));
+    backdrop-filter: blur(6px); transition: opacity 0.35s ease; gap: 18px;
+  }
+  .overlay.hidden { opacity: 0; pointer-events: none; }
+  .title {
+    font-size: 72px; font-weight: 900; letter-spacing: 2px; line-height: 1;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    text-shadow: 0 0 40px rgba(56,232,255,0.35); animation: pulse 2.6s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{ filter: brightness(1);} 50%{ filter: brightness(1.25);} }
+  .subtitle { font-size: 16px; opacity: 0.8; max-width: 520px; line-height: 1.6; }
+  .keys { font-size: 13px; opacity: 0.6; letter-spacing: 1px; }
+  .btn {
+    pointer-events: auto; cursor: pointer; font-size: 18px; font-weight: 800; letter-spacing: 1px;
+    padding: 14px 42px; border: none; border-radius: 40px; color: #04121a;
+    background: linear-gradient(90deg, var(--accent), #7af7ff);
+    box-shadow: 0 8px 30px rgba(56,232,255,0.4); transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .btn:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 12px 40px rgba(56,232,255,0.6); }
+  .btn.secondary { background: linear-gradient(90deg, var(--accent2), #ff86bf); box-shadow: 0 8px 30px rgba(255,62,154,0.4); }
+  .big-score { font-size: 22px; }
+  .big-score b { color: var(--accent); font-size: 30px; }
+
+  /* upgrade screen */
+  #upgradeCards { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; max-width: 760px; }
+  .card {
+    pointer-events: auto; cursor: pointer; width: 168px; padding: 20px 16px; border-radius: 16px;
+    background: var(--panel); box-shadow: inset 0 0 0 1px rgba(56,232,255,0.25), 0 10px 30px rgba(0,0,0,0.5);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .card:hover { transform: translateY(-4px); box-shadow: inset 0 0 0 1px var(--accent), 0 14px 40px rgba(56,232,255,0.35); }
+  .card.disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1); }
+  .card .ic { font-size: 34px; }
+  .card .cname { font-size: 16px; font-weight: 800; margin: 8px 0 4px; }
+  .card .clvl { font-size: 12px; opacity: 0.7; }
+  .card .ccost { margin-top: 10px; font-weight: 800; color: var(--warn); }
+
+  #pauseHint { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); font-size: 12px; opacity: 0.4; z-index: 9; letter-spacing: 2px; }
+</style>
+
+<!-- import map: three + addons via CDN ESM (loaded at runtime, no build step) -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+  <div id="app"></div>
+
+  <div id="pauseHint">ESC PAUSE · WASD MOVE · MOUSE AIM · CLICK/SPACE FIRE · SHIFT DASH</div>
+
+  <!-- HUD -->
+  <div id="hud" class="hidden">
+    <div class="hud-top">
+      <div class="stat" id="scoreBox"><div class="label">Score</div><div class="value" id="scoreVal">0</div></div>
+      <div class="stat" id="waveBox"><div class="label">Wave</div><div class="value" id="waveVal">1</div></div>
+      <div class="stat" id="highBox"><div class="label">Best</div><div class="value" id="highVal">0</div></div>
+    </div>
+    <div class="hud-bottom">
+      <div class="bar-wrap"><div id="healthFill"></div><div class="bar-label" id="healthLabel">100 / 100</div></div>
+      <div id="cooldownWrap"><div id="cooldownFill"></div></div>
+      <div id="buffRow"></div>
+    </div>
+  </div>
+  <div id="crosshair"></div>
+  <div id="floaters"></div>
+
+  <!-- Main menu -->
+  <div id="menuOverlay" class="overlay">
+    <div class="title">ARENA SURVIVOR</div>
+    <div class="subtitle">Survive escalating waves in a neon arena. Dodge, blast, upgrade — a boss hunts you every 5th wave.</div>
+    <button class="btn" id="playBtn">PLAY</button>
+    <div class="keys">WASD move · mouse aim · click / space fire · shift dash · esc pause</div>
+  </div>
+
+  <!-- Pause -->
+  <div id="pauseOverlay" class="overlay hidden">
+    <div class="title" style="font-size:56px;">PAUSED</div>
+    <button class="btn" id="resumeBtn">RESUME</button>
+    <button class="btn secondary" id="quitBtn">QUIT TO MENU</button>
+  </div>
+
+  <!-- Between-wave upgrade -->
+  <div id="upgradeOverlay" class="overlay hidden">
+    <div class="title" style="font-size:48px;">WAVE <span id="upWaveNum">1</span> CLEARED</div>
+    <div class="big-score">Score to spend: <b id="upScore">0</b></div>
+    <div id="upgradeCards"></div>
+    <button class="btn" id="nextWaveBtn">NEXT WAVE ▸</button>
+  </div>
+
+  <!-- Game over -->
+  <div id="overOverlay" class="overlay hidden">
+    <div class="title" style="font-size:64px;">GAME OVER</div>
+    <div class="big-score">Score <b id="finalScore">0</b></div>
+    <div class="subtitle" id="overMsg">You reached wave 1.</div>
+    <button class="btn" id="restartBtn">PLAY AGAIN</button>
+  </div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

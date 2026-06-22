@@ -1,0 +1,75 @@
+CHILD-3 BRIEF — combat.js (projectiles + collision + power-ups + upgrades) AND audio.js (Web Audio synth)
+
+You are an autonomous Claude Code worker for the "Arena Survivor" 3D game.
+
+STEP 0 — READ IN FULL FIRST:
+  /Users/danielwaheed/experiment3/mechb/CONTRACT.md   (the shared module contract — OBEY IT EXACTLY)
+Re-read the STATE object, Enemy/Projectile/Powerup/Event shapes, and the "combat.js
+(CHILD-3, part 1)" and "audio.js (CHILD-3, part 2)" export blocks. Mutate the EXACT fields.
+
+HARD RULES:
+- Work ONLY inside /Users/danielwaheed/experiment3/mechb. Build EXACTLY TWO files:
+    /Users/danielwaheed/experiment3/mechb/combat.js
+    /Users/danielwaheed/experiment3/mechb/audio.js
+  Do NOT create any other module (no render.js/entities.js/index.html/main.js).
+  Do NOT touch briefs/, logs/, CONTRACT.md, or anything outside the workdir.
+- Coding tools only (read/write/edit + bash for `node` tests). NO network, NO servers, NO
+  irreversible/external tools. Do NOT spawn sub-agents/Claude sessions. Do NOT use Workflow.
+- BOTH files MUST be import-safe under Node (so they can be unit-tested):
+  * combat.js MUST NOT import three and MUST NOT reference window/document/THREE. Pure math.
+    It MAY `import { spawnEnemyAt, ARENA_HALF } from './entities.js';` for splitter death
+    spawns (entities.js is also three-free) — OR inline-create the 2 chaser enemies per the
+    Enemy shape if you prefer zero cross-imports (either is fine; if you import, the symbol
+    names above are guaranteed by the contract).
+  * audio.js uses Web Audio but every export MUST no-op safely when AudioContext is
+    undefined (Node): guard with
+      if (typeof AudioContext === 'undefined' && typeof webkitAudioContext === 'undefined') return;
+- DETERMINISM (combat.js): never Math.random(); use `state.rng()` for powerup drop chance,
+  drop kind selection, splitter spawn offsets, etc.
+
+combat.js EXPORTS (exact names; full semantics in CONTRACT):
+  export function fire(state, dirX, dirZ)        // respects player.fireCooldown; normalizes dir;
+       // spread (3 shots) while buffs.spread>0; damage scales w/ upgrades.damage; fromPlayer:true;
+       // sets player.fireCooldown (reduced by upgrades.fireRate, halved while buffs.rapidFire>0);
+       // pushes {type:'shoot'} + {type:'muzzle'} events. Base projectile speed ~28, ttl ~1.2s.
+  export function updateProjectiles(state, dt)   // pos+=vel*dt; ttl-=dt; dead if ttl<=0 or |x|/|z|>ARENA_HALF.
+  export function resolveCollisions(state)       // see CONTRACT: player-proj vs enemies (damage,
+       // knockback, hitFlash, hit event; on death: score+=reward, enemyDeath+explosion events,
+       // rng-based powerup drop, splitter->2 chasers); enemy-proj & enemy-body vs player (respect
+       // player.invuln; damage, set invuln~0.6, knockback, hitFlash, playerHurt event; health<=0 ->
+       // gameOver + event). Remove dead projectiles & enemies at the end.
+  export function updatePowerups(state, dt)      // bob/ttl; pickup on overlap: health heals ~30 (cap
+       // maxHealth), rapidFire/spread/speed set buffs.<x>~6s; pickup event; remove picked/expired.
+  export function applyUpgrade(state, kind)      // kind∈damage|fireRate|moveSpeed|maxHealth;
+       // cost=(level+1)*100; if score>=cost: score-=cost, upgrades[kind]++ (maxHealth also +20 to
+       // state.maxHealth and heals 20); return true else false.
+  export function tickBuffs(state, dt)           // decrement buffs.rapidFire/spread/speed to >=0.
+
+REWARD/BALANCE: enemy kill score reward by type (e.g. chaser 10, shooter 15, tank 25,
+splitter 15, boss 200). Powerup drop chance ~15% per kill (boss always drops). Knockback &
+brief hitFlash on every damage event so the game FEELS punchy. Keep ALL of it deterministic.
+
+audio.js EXPORTS: initAudio(), resumeAudio(), playSound(name), setMuted(m).
+  name ∈ 'shoot'|'hit'|'explosion'|'waveStart'|'playerHurt'|'gameOver'|'pickup'|'upgrade'.
+  Synth only (oscillators + gain envelopes + optional noise buffer for explosion). Distinct,
+  short, pleasant tones per event. Lazy AudioContext creation; resumeAudio() for the gesture
+  unlock; setMuted toggles a master gain. NEVER throw in Node.
+
+SELF-TEST (MANDATORY — actually execute):
+- combat.js: write a throwaway `node --input-type=module` script that builds a fake state
+  (same shape as in the contract; rng:()=>0.5, an enemy near the player, a player projectile
+  overlapping it) and asserts: fire() adds a projectile & sets fireCooldown; updateProjectiles
+  advances/expires; resolveCollisions damages/kills the enemy, adds score, removes it, pushes
+  hit/enemyDeath events; an enemy-body overlapping the player reduces health and sets invuln;
+  applyUpgrade('damage') with enough score decrements score and bumps upgrades.damage;
+  updatePowerups picks up an overlapping 'health' powerup and heals. Print PASS; delete temp.
+- audio.js: `node --check audio.js` AND `node -e "import('./audio.js').then(m=>{m.initAudio();
+  m.playSound('shoot'); m.setMuted(true); console.log('audio import-safe');})"` must run
+  WITHOUT throwing in Node (the functions no-op there).
+
+FINISH PROTOCOL (final actions, in order):
+  1. Append at start: <UTC> | START | child-3 | building combat.js + audio.js
+     Append at end:   <UTC> | DONE | child-3 | combat.js+audio.js built + node tests green
+     to /Users/danielwaheed/experiment3/mechb/PROGRESS.log  (<UTC> = date -u +%Y-%m-%dT%H:%M:%SZ)
+  2. Write /Users/danielwaheed/experiment3/mechb/logs/child-3.done containing: done
+Then stop.

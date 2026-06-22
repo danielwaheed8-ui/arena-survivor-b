@@ -1,0 +1,75 @@
+CHILD-1 BRIEF — render.js (ALL visuals: scene, lighting, shadows, arena, post-processing, meshes, particles, screen-shake, camera)
+
+You are an autonomous Claude Code worker for the "Arena Survivor" 3D game.
+
+STEP 0 — READ THESE IN FULL FIRST:
+  /Users/danielwaheed/experiment3/mechb/CONTRACT.md   (the shared module contract — OBEY IT EXACTLY)
+Re-read the CONTRACT's "render.js (CHILD-1)" export block and the STATE / Enemy /
+Projectile / Powerup / Event shapes — your code consumes those exact shapes.
+
+HARD RULES:
+- Work ONLY inside /Users/danielwaheed/experiment3/mechb. Build EXACTLY ONE file:
+    /Users/danielwaheed/experiment3/mechb/render.js
+  Do NOT create index.html, main.js, entities.js, combat.js, audio.js, or any other
+  module — ONLY render.js. Do NOT touch briefs/, logs/, CONTRACT.md, or anything outside
+  the workdir.
+- Coding tools only (read/write/edit + bash for `node --check`). NO network during build,
+  NO servers, NO irreversible/external tools. Do NOT spawn any sub-agents/Claude sessions.
+  Do NOT use the Workflow tool.
+- render.js is the ONLY module allowed to import three. Use ESM:
+    import * as THREE from 'three';
+    import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+    import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+    import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+    (optional: ShaderPass + FXAAShader from three/addons/shaders/FXAAShader.js for FXAA)
+  These resolve at runtime via the orchestrator's import map (three@0.160.0). Use APIs that
+  exist in three r0.160.
+
+WHAT TO BUILD — `export function createRenderWorld(container)` returning a `world` object
+with the methods listed in the CONTRACT. Make it LOOK GREAT (this is explicitly judged):
+- Renderer: antialias:true, renderer.shadowMap.enabled=true (PCFSoft), ACESFilmicToneMapping,
+  outputColorSpace = SRGB, devicePixelRatio-aware, mounted into `container`.
+- Scene: cohesive palette + atmospheric fog (THREE.Fog or FogExp2). A POLISHED arena:
+  large ground plane (NOT flat gray — gradient via vertex colors or a canvas-generated
+  texture, subtle grid, emissive accent lines), boundary walls at ±ARENA_HALF (40) with
+  emissive edges, tasteful low-poly rich aesthetic.
+- Lighting: a DirectionalLight casting shadows (configure shadow camera bounds to cover the
+  arena, reasonable mapSize) + HemisphereLight and/or AmbientLight for fill.
+- Camera: PerspectiveCamera angled down over the arena (e.g. high and behind the player),
+  eased follow via world.followPlayer(x,z,dt) (lerp toward target, frame-rate independent).
+- Post: EffectComposer with RenderPass + UnrealBloomPass (strong but tasteful bloom). FXAA
+  and/or a vignette welcome. world.render(dt) calls composer.render().
+- world.sync(state, dt): maintain id->mesh Maps for enemies, projectiles, powerups; create
+  meshes on new ids, update position (map logic x,z -> world x,z, y for entity height),
+  remove meshes whose id no longer exists. DISTINCT look per enemy type (chaser=small fast
+  spiky, tank=big armored, shooter=mid w/ emissive eye, splitter=clustered, boss=huge
+  menacing, all emissive-accented). Player mesh distinct & bright. Projectiles glow.
+  Powerups: distinct color per kind (health=green, rapidFire=yellow, spread=cyan,
+  speed=magenta) with bob/spin. Apply hitFlash (lerp material emissive/colour to white when
+  entity.hitFlash>0) and spawnScale (scale mesh by entity.spawnScale for pop-in).
+- world.handleEvent(evt): spawn the matching particle burst — muzzle flash (evt 'muzzle'),
+  hit sparks ('hit'), enemy explosion ('explosion', size by scale), pickup sparkle
+  ('pickup'), player-hurt flash ('playerHurt'); call world.addShake() on
+  hit/explosion/playerHurt/gameOver with sensible magnitudes. Use THREE.Points or small
+  pooled meshes; update & fade them frame-rate-independently inside world.render(dt).
+- world.addShake(amount): accumulate shake; world.render decays it and offsets the camera.
+- world.resize(w,h): update camera.aspect + renderer/composer setSize + FXAA resolution.
+
+Frame-rate independence: every animated thing (particles, shake decay, camera follow) uses
+the dt passed in — NOT fixed per-frame constants.
+
+DEFENSIVE: world.sync must tolerate empty arrays and ids appearing/disappearing without
+throwing. Never assume an enemy/projectile still exists between frames.
+
+SELF-TEST before finishing:
+- Run: node --check render.js   (must pass — fix all syntax errors).
+- Carefully re-read your three.js API usage against r0.160 (EffectComposer/UnrealBloomPass
+  constructors, ShaderPass, shadow setup). You cannot open a browser; be meticulous.
+
+FINISH PROTOCOL (final actions, in order):
+  1. At the very start append:  <UTC> | START | child-1 | building render.js
+     At the end append:         <UTC> | DONE | child-1 | render.js built + node --check clean
+     to /Users/danielwaheed/experiment3/mechb/PROGRESS.log
+     where <UTC> = output of: date -u +%Y-%m-%dT%H:%M:%SZ
+  2. Write /Users/danielwaheed/experiment3/mechb/logs/child-1.done containing: done
+Then stop.
