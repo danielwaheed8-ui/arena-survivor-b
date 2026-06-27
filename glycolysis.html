@@ -1,0 +1,883 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#06121b" />
+<title>GLYCOLYSIS — Pathway Runner</title>
+<style>
+  /* ============================================================
+     GLYCOLYSIS — Pathway Runner
+     Single-file arcade game. Core mechanic IS glycolysis:
+     you are the carbon, steer into the correct enzyme gate.
+     No external assets. All art = canvas. All SFX = WebAudio.
+     ============================================================ */
+  :root{
+    --bg0:#06121b; --bg1:#0a1f2e;
+    --cyan:#34e0ff; --amber:#ffb347; --gold:#ffd24a;
+    --purple:#b98bff; --red:#ff5c6c; --green:#6cff9e;
+    --ink:#dff3ff; --muted:#7fa6bd;
+    --card:rgba(8,24,34,.92);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;background:var(--bg0);overflow:hidden;
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);}
+  #game{position:fixed;inset:0;width:100vw;height:100vh;display:block;touch-action:none;}
+
+  /* Full-screen overlay cards (menu / pause / summary) */
+  .screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    padding:16px;z-index:10;background:radial-gradient(120% 120% at 50% 0%,rgba(10,40,58,.78),rgba(3,9,14,.94));
+    backdrop-filter:blur(3px);}
+  .screen.hidden{display:none;}
+  .card{width:min(560px,94vw);max-height:94vh;overflow:auto;background:var(--card);
+    border:1px solid rgba(52,224,255,.28);border-radius:18px;padding:22px 22px 18px;
+    box-shadow:0 18px 60px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.05);}
+  h1{margin:0 0 2px;font-size:clamp(28px,7vw,44px);letter-spacing:.5px;
+    background:linear-gradient(90deg,var(--cyan),var(--amber));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  h1 .sub{display:block;font-size:13px;letter-spacing:3px;color:var(--muted);
+    -webkit-text-fill-color:var(--muted);font-weight:600;margin-top:4px;}
+  h2{margin:0 0 10px;font-size:clamp(20px,5vw,28px);}
+  p{margin:8px 0;color:var(--ink);font-size:14.5px;line-height:1.5;}
+  .muted{color:var(--muted);font-size:13px;}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .keys{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;}
+  .key{border:1px solid rgba(127,166,189,.4);border-radius:8px;padding:6px 10px;font-size:13px;color:var(--muted);}
+  .btn{appearance:none;border:0;cursor:pointer;font:inherit;font-weight:700;letter-spacing:.3px;
+    padding:13px 18px;border-radius:12px;color:#06121b;background:linear-gradient(180deg,var(--cyan),#19b6db);
+    box-shadow:0 6px 18px rgba(52,224,255,.35);transition:transform .08s ease, box-shadow .08s ease;}
+  .btn:hover{transform:translateY(-1px);} .btn:active{transform:translateY(1px);}
+  .btn.secondary{background:transparent;color:var(--ink);border:1px solid rgba(127,166,189,.45);box-shadow:none;}
+  .btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px;}
+  .toggle{font-size:13px;color:var(--muted);border:1px solid rgba(127,166,189,.35);
+    border-radius:9px;padding:9px 12px;cursor:pointer;background:transparent;user-select:none;}
+  .toggle:focus-visible{outline:3px solid var(--amber);outline-offset:2px;}
+  .grade{font-weight:900;font-size:46px;line-height:1;}
+  .ledger{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0;}
+  .chip{flex:1 1 120px;border:1px solid rgba(127,166,189,.3);border-radius:12px;padding:10px 12px;background:rgba(0,0,0,.18);}
+  .chip b{display:block;font-size:22px;} .chip span{font-size:12px;color:var(--muted);}
+  .legend{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;margin:10px 0;font-size:12.5px;color:var(--muted);}
+  .legend b{color:var(--ink);}
+  .footer{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;align-items:center;}
+  a{color:var(--cyan);}
+  @media (max-width:420px){ .legend{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<canvas id="game" aria-label="Glycolysis pathway runner game"></canvas>
+
+<!-- ===================== MENU ===================== -->
+<div id="menuScreen" class="screen">
+  <div class="card">
+    <h1>GLYCOLYSIS<span class="sub">PATHWAY RUNNER</span></h1>
+    <p><b>You are the carbon.</b> Hurtle down the cytoplasm and steer into the <b>correct enzyme gate</b>
+       for whatever molecule you currently are. Get it right and you transform, bank ATP/NADH, and build combo.
+       Get it wrong and you stall.</p>
+    <div class="keys">
+      <span class="key">◀ ▶ / A D — steer lanes</span>
+      <span class="key">Tap / drag a lane — touch</span>
+      <span class="key">P — pause</span>
+      <span class="key">M — mute</span>
+    </div>
+    <p class="muted">Steps 1–5 are the <b>investment phase</b> — gates 1 &amp; 3 <i>spend</i> your ATP.
+       Step 4 <b>splits</b> the 6-carbon sugar into two 3-carbon trioses, so the <b>payoff phase runs ×2</b>.
+       Run your ATP to zero and you die. Know the order or you won't survive the speed.</p>
+    <div class="footer">
+      <button class="btn" id="startBtn">▶ Start run</button>
+      <div class="row">
+        <button class="toggle" id="soundToggle" aria-pressed="true">🔊 Sound: On</button>
+        <button class="toggle" id="motionToggle" aria-pressed="false">✨ Motion: Full</button>
+      </div>
+    </div>
+    <p class="muted" id="bestLine" style="margin-top:12px"></p>
+  </div>
+</div>
+
+<!-- ===================== PAUSE ===================== -->
+<div id="pauseScreen" class="screen hidden">
+  <div class="card">
+    <h2>Paused</h2>
+    <p class="muted">Take a breath. The clock is stopped.</p>
+    <div class="footer">
+      <button class="btn" id="resumeBtn">Resume</button>
+      <div class="row">
+        <button class="btn secondary" id="pauseRestartBtn">Restart</button>
+        <button class="toggle" id="soundToggle2" aria-pressed="true">🔊 Sound</button>
+        <button class="toggle" id="motionToggle2" aria-pressed="false">✨ Motion</button>
+        <button class="btn secondary" id="pauseMenuBtn">Menu</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== SUMMARY ===================== -->
+<div id="summaryScreen" class="screen hidden">
+  <div class="card">
+    <div class="row" style="justify-content:space-between;align-items:flex-start">
+      <div>
+        <h2 id="sumTitle">Pathway complete</h2>
+        <p class="muted" id="sumSubtitle"></p>
+      </div>
+      <div class="grade" id="sumGrade" style="color:var(--gold)">A</div>
+    </div>
+
+    <div class="ledger">
+      <div class="chip"><b id="sumATP" style="color:var(--gold)">+2 ATP</b><span id="sumATPdetail">made 4 − spent 2</span></div>
+      <div class="chip"><b id="sumNADH" style="color:var(--purple)">+2 NADH</b><span>redox at GAPDH ×2</span></div>
+      <div class="chip"><b id="sumPyr" style="color:var(--cyan)">2 Pyruvate</b><span>2× triose payoff</span></div>
+    </div>
+
+    <div class="legend">
+      <div>Score <b id="sumScore">0</b></div>
+      <div>Time <b id="sumTime">0.0s</b></div>
+      <div>Max combo <b id="sumCombo">×0</b></div>
+      <div>Mistakes <b id="sumMiss">0</b></div>
+    </div>
+
+    <p class="muted" id="sumHook"></p>
+
+    <div class="footer">
+      <button class="btn" id="againBtn">↻ Run again</button>
+      <div class="row">
+        <button class="btn secondary" id="sumMenuBtn">Menu</button>
+        <span class="muted" id="sumBest"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+(function(){
+/* ============================================================
+   0. GROUND TRUTH — the pathway. The table in the brief is the
+   ONLY source of truth. step.atp / step.nadh are per single
+   application of that step. Payoff steps (6–10) run twice via
+   the SEQUENCE, which is what makes the net come out to
+   +2 ATP / +2 NADH / 2 pyruvate.
+   ============================================================ */
+const STEPS = [
+  {n:1, substrate:'Glucose',         product:'Glucose-6-P',     enzyme:'Hexokinase',
+   atp:-1, nadh:0, carbons:6, irreversible:true, control:true,
+   fact:'Hexokinase phosphorylates C6, trapping glucose in the cell. Costs 1 ATP. Inhibited by its product G6P.'},
+  {n:2, substrate:'Glucose-6-P',     product:'Fructose-6-P',    enzyme:'Phosphoglucose isomerase',
+   atp:0, nadh:0, carbons:6,
+   fact:'Phosphoglucose isomerase isomerizes the aldose G6P into the ketose F6P.'},
+  {n:3, substrate:'Fructose-6-P',    product:'Fructose-1,6-BP', enzyme:'PFK-1',
+   atp:-1, nadh:0, carbons:6, irreversible:true, control:true, boss:true,
+   fact:'PFK-1 is the committed, rate-limiting step. Activated by AMP & F2,6BP; inhibited by ATP & citrate.'},
+  {n:4, substrate:'Fructose-1,6-BP', product:'DHAP + G3P',      enzyme:'Aldolase',
+   atp:0, nadh:0, carbons:6, split:true,
+   fact:'Aldolase cleaves the 6-carbon sugar into two 3-carbon trioses: DHAP + G3P.'},
+  {n:5, substrate:'DHAP',            product:'G3P',             enzyme:'Triose phosphate isomerase',
+   atp:0, nadh:0, carbons:3,
+   fact:'TPI converts DHAP into G3P — now there are 2× G3P. End of the investment phase.'},
+  {n:6, substrate:'G3P',             product:'1,3-BPG',         enzyme:'GAPDH',
+   atp:0, nadh:1, carbons:3, redox:true,
+   fact:'GAPDH is the ONLY redox step: oxidizes G3P, reduces NAD⁺→NADH, adds Pi.'},
+  {n:7, substrate:'1,3-BPG',         product:'3-PG',            enzyme:'Phosphoglycerate kinase',
+   atp:1, nadh:0, carbons:3,
+   fact:'Phosphoglycerate kinase makes ATP by substrate-level phosphorylation (#1). Recovers the investment.'},
+  {n:8, substrate:'3-PG',            product:'2-PG',            enzyme:'Phosphoglycerate mutase',
+   atp:0, nadh:0, carbons:3,
+   fact:'Phosphoglycerate mutase moves the phosphate from C3 to C2.'},
+  {n:9, substrate:'2-PG',            product:'PEP',             enzyme:'Enolase',
+   atp:0, nadh:0, carbons:3,
+   fact:'Enolase dehydrates 2-PG (−H₂O) into high-energy PEP. Inhibited by fluoride.'},
+  {n:10,substrate:'PEP',             product:'Pyruvate',        enzyme:'Pyruvate kinase',
+   atp:1, nadh:0, carbons:3, irreversible:true, control:true,
+   fact:'Pyruvate kinase makes ATP by substrate-level phosphorylation (#2). Feed-forward activated by F1,6BP.'},
+];
+// Distinct enzyme roster, used to draw decoys (always real glycolytic enzymes).
+const ENZYME_POOL = [...new Set(STEPS.map(s=>s.enzyme))];
+
+// The run order: investment 1–5 once, then payoff 6–10 TWICE (the two trioses).
+// Indices into STEPS.  idx 0..4 = steps1..5 ; idx 5..9 = steps6..10.
+const SEQUENCE = [0,1,2,3,4,  5,6,7,8,9,  5,6,7,8,9];
+// Which triose pass each sequence position belongs to (0 = investment, 1 or 2 = payoff pass).
+const TRIOSE_OF = SEQUENCE.map((_,i)=> i<5 ? 0 : (i<10 ? 1 : 2));
+
+/* ============================================================
+   1. SETUP — canvas, layout, persistence, options
+   ============================================================ */
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+let W=0,H=0,DPR=1;
+let laneX=[0,0,0], laneW=0, hudH=80, gateH=110, mol={x:0,y:0};
+const LANES=3;
+
+// Options (sound + reduced motion). Reduced motion seeded from the OS setting.
+const mqReduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+let opts = { sound:true, reduced: mqReduce.matches };
+mqReduce.addEventListener && mqReduce.addEventListener('change', e=>{ if(e.matches){ opts.reduced=true; syncOptionUI(); }});
+
+// Persistence with graceful fallback if storage is blocked.
+let store = { best:0, bestTime:0, runs:0 };
+let storageOK = true;
+try{
+  const raw = localStorage.getItem('glycolysis.best');
+  if(raw) store = Object.assign(store, JSON.parse(raw));
+}catch(e){ storageOK=false; }
+function saveStore(){ if(!storageOK) return; try{ localStorage.setItem('glycolysis.best', JSON.stringify(store)); }catch(e){ storageOK=false; } }
+
+function resize(){
+  DPR = Math.min(window.devicePixelRatio||1, 2);
+  W = Math.max(1, window.innerWidth); H = Math.max(1, window.innerHeight);
+  canvas.width = Math.round(W*DPR); canvas.height = Math.round(H*DPR);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  laneW = W/LANES;
+  for(let i=0;i<LANES;i++) laneX[i] = (i+0.5)*laneW;
+  hudH = clamp(H*0.11, 62, 92);
+  gateH = clamp(H*0.145, 74, 132);
+  mol.y = H*0.80;
+  mol.x = laneX[clamp(targetLane,0,LANES-1)];
+}
+window.addEventListener('resize', resize);
+
+/* ============================================================
+   2. AUDIO — synthesized SFX (no asset files)
+   ============================================================ */
+let actx=null, master=null;
+function audioInit(){
+  if(actx) return;
+  try{
+    actx = new (window.AudioContext||window.webkitAudioContext)();
+    master = actx.createGain(); master.gain.value = 0.9; master.connect(actx.destination);
+  }catch(e){ actx=null; }
+}
+function tone(freq, dur, type='sine', vol=0.25, slideTo=null, when=0){
+  if(!actx || !opts.sound) return;
+  const t0 = actx.currentTime + when;
+  const o = actx.createOscillator(); const g = actx.createGain();
+  o.type=type; o.frequency.setValueAtTime(freq, t0);
+  if(slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(1,slideTo), t0+dur);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(vol, t0+0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+  o.connect(g); g.connect(master); o.start(t0); o.stop(t0+dur+0.02);
+}
+function noise(dur, vol=0.2){
+  if(!actx || !opts.sound) return;
+  const n = Math.floor(actx.sampleRate*dur);
+  const buf = actx.createBuffer(1,n,actx.sampleRate); const d=buf.getChannelData(0);
+  for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n);
+  const src=actx.createBufferSource(); src.buffer=buf;
+  const g=actx.createGain(); g.gain.value=vol; src.connect(g); g.connect(master); src.start();
+}
+const SFX = {
+  correct(combo){ const tier=Math.min(combo,18); const base=440+tier*28;
+    tone(base,0.12,'triangle',0.22,base*1.5); tone(base*1.5,0.09,'sine',0.12,base*2); },
+  atp(){ tone(880,0.10,'square',0.16,1320); tone(1320,0.08,'sine',0.10); },
+  nadh(){ // GAPDH redox — the signature moment: a little rising chord
+    tone(330,0.30,'sawtooth',0.14,660); tone(495,0.30,'triangle',0.12,990,0.04); tone(660,0.34,'sine',0.12,1320,0.07); },
+  wrong(){ tone(180,0.22,'sawtooth',0.22,70); noise(0.18,0.18); },
+  boss(){ tone(110,0.5,'sawtooth',0.16,220); tone(165,0.5,'square',0.10,330,0.05); },
+  reg(good){ if(good){ tone(720,0.10,'square',0.14,1080);} else { tone(150,0.16,'sawtooth',0.16,90); noise(0.1,0.12);} },
+  split(){ tone(520,0.14,'triangle',0.16,260); tone(390,0.16,'sine',0.12,195,0.04); },
+  start(){ tone(330,0.10,'triangle',0.18,495); tone(495,0.12,'sine',0.16,660,0.08); },
+  death(){ tone(330,0.6,'sawtooth',0.22,70); noise(0.4,0.18); },
+  win(){ [523,659,784,1046].forEach((f,i)=>tone(f,0.5,'triangle',0.16,f,i*0.10)); },
+  click(){ tone(600,0.05,'square',0.12,800); },
+};
+
+/* ============================================================
+   3. GAME STATE
+   ============================================================ */
+let state='menu'; // menu | playing | paused | dead | win
+let targetLane=1;             // the lane the player intends — used for the correctness decision
+let seqPos=0;                 // index into SEQUENCE
+let gateRow=null;             // active row of enzyme gates
+let regulators=[];            // PFK-1 boss floating modifiers
+let particles=[];
+let popups=[];                // floating combo / fact text
+let runTime=0, score=0, combo=0, maxCombo=0, wrongCount=0, correctCount=0;
+let atpMeter=5;               // survival resource (includes wrong-move penalties)
+const ATP_START=5, ATP_MAX=10;
+let ledger={made:0,spent:0,nadh:0,pyr:0}; // pure pathway accounting → drives the honest +2/+2/2 summary
+let molName='Glucose', molCarbons=6, molColorPhase='invest';
+let molX=0;                   // animated x position of the molecule
+let hitStop=0, shake=0, flash=null, teach=null, banner=null, speedPulse=0;
+let bossActive=false;
+let firstRunHintT=0;          // brief on-canvas control hint
+
+// difficulty: time (seconds) for a gate to travel from spawn to the molecule.
+const T_START=2.30, T_MIN=0.95;
+function travelTime(){
+  // forgiving early in a run, ramps with correct hits this run AND with lifetime runs completed
+  const lvl = Math.min(store.runs, 6);
+  return clamp(T_START - 0.05*correctCount - 0.10*lvl, T_MIN, T_START);
+}
+function comboMult(c){ if(c>=24)return 5; if(c>=12)return 4; if(c>=6)return 3; if(c>=3)return 2; return 1; }
+
+/* ============================================================
+   4. RUN LIFECYCLE
+   ============================================================ */
+function startGame(){
+  audioInit(); if(actx && actx.state==='suspended') actx.resume();
+  hideAll();
+  state='playing';
+  targetLane=1; seqPos=0; runTime=0; score=0; combo=0; maxCombo=0; wrongCount=0; correctCount=0;
+  atpMeter=ATP_START; ledger={made:0,spent:0,nadh:0,pyr:0};
+  regulators.length=0; particles.length=0; popups.length=0;
+  hitStop=0; shake=0; flash=null; teach=null; banner=null; speedPulse=0; bossActive=false;
+  firstRunHintT = store.runs===0 ? 3.4 : 1.4;
+  setMolFrom(SEQUENCE[0]);
+  banner = {text:'INVESTMENT PHASE', sub:'spend ATP to prime the sugar', t:1.8, color:'var(--cyan)'};
+  spawnRow();
+  SFX.start();
+}
+function setMolFrom(idx){
+  const s = STEPS[idx];
+  molName = s.substrate; molCarbons = s.carbons;
+  molColorPhase = idx<5 ? 'invest' : 'payoff';
+}
+function spawnRow(){
+  const idx = SEQUENCE[seqPos];
+  const step = STEPS[idx];
+  const decoys = pickDecoys(step.enzyme, 2);
+  const enzymes = shuffle([step.enzyme, ...decoys]);
+  const correctLane = enzymes.indexOf(step.enzyme);
+  // spawn fully below the HUD so the enzyme name is legible for the whole descent
+  const spawnY = hudH + 8;
+  const dist = (mol.y) - spawnY;
+  gateRow = {
+    y: spawnY, idx, correctLane, resolved:false,
+    speed: dist / travelTime(),
+    gates: enzymes.map((e,i)=>({enzyme:e, lane:i})),
+  };
+  // PFK-1 regulation boss event
+  bossActive = !!step.boss;
+  if(step.boss){ spawnRegulators(); SFX.boss();
+    banner = {text:'PFK-1 — RATE-LIMITING GATE', sub:'grab AMP / F2,6BP · dodge ATP / citrate', t:2.0, color:'var(--amber)'};
+  }
+}
+function pickDecoys(correct, n){
+  const pool = ENZYME_POOL.filter(e=>e!==correct);
+  shuffle(pool); return pool.slice(0,n);
+}
+function spawnRegulators(){
+  regulators.length=0;
+  const defs=[{l:'AMP',g:true},{l:'F2,6BP',g:true},{l:'ATP',g:false},{l:'citrate',g:false}];
+  shuffle(defs);
+  // regulators ride between the gate row and the molecule — on-screen and reaching you first
+  const startY = hudH + 8 + gateH + 36;
+  defs.forEach((d,i)=>{
+    regulators.push({ label:d.l, good:d.g,
+      lane: i%LANES, x: laneX[i%LANES], y: startY + i*44,
+      r: clamp(laneW*0.16, 18, 30), dead:false, vx:(Math.random()-0.5)*16 });
+  });
+}
+
+function resolveRow(){
+  const correct = (targetLane === gateRow.correctLane);
+  if(correct) onCorrect(); else onWrong();
+}
+function onCorrect(){
+  const idx = gateRow.idx; const step = STEPS[idx];
+  combo++; maxCombo=Math.max(maxCombo,combo); correctCount++;
+  const mult = comboMult(combo);
+  score += Math.round(100*mult) + 15;
+  // ledger + meter
+  atpMeter = clamp(atpMeter + step.atp, 0, ATP_MAX);
+  if(step.atp>0){ ledger.made += step.atp; SFX.atp(); spawnATP(true, step.atp); }
+  else if(step.atp<0){ ledger.spent += -step.atp; SFX.atp(); spawnATP(false, -step.atp); }
+  if(step.nadh>0){ ledger.nadh += step.nadh; SFX.nadh(); spawnNADH(step.nadh);
+    pushBanner('REDOX! NAD⁺ → NADH', 'the only redox step', 'var(--purple)', 1.5); }
+  if(idx===9){ ledger.pyr += 1; } // each pyruvate kinase completion = 1 pyruvate
+
+  SFX.correct(combo);
+  burst(mol.x, mol.y, molColorPhase==='invest'?'#34e0ff':'#ffb347', 14);
+  flash = {color: step.redox?'rgba(185,139,255,.18)':'rgba(108,255,158,.14)', t:0.22};
+  shake = Math.min(shake+ (step.boss?7:4), 12);
+  speedPulse = 0.35;
+  if(mult>=2) popups.push({x:mol.x, y:mol.y-70, txt:'×'+mult, t:0.9, color:'#ffd24a', vy:-42, size:26});
+
+  // molecule morphs to the product
+  molName = step.product; molCarbons = step.carbons===6 && idx>=4 ? 3 : step.carbons;
+  if(step.split){ SFX.split(); pushBanner('SPLIT! 6C → 2×3C', 'two trioses to clear', 'var(--cyan)', 1.6);
+    burst(mol.x, mol.y, '#34e0ff', 22); }
+
+  // advance
+  seqPos++;
+  if(seqPos>=SEQUENCE.length){ return winGame(); }
+
+  // phase / triose transitions
+  const prevTri = TRIOSE_OF[seqPos-1], nowTri = TRIOSE_OF[seqPos];
+  if(prevTri===0 && nowTri===1){
+    pushBanner('PAYOFF PHASE  ×2', 'cash in ATP & NADH — twice', 'var(--gold)', 1.9);
+  }
+  if(nowTri!==prevTri && nowTri>=1){
+    // entering a payoff pass: the molecule becomes G3P (this triose)
+    setMolFrom(SEQUENCE[seqPos]);
+    if(nowTri===2){ pushBanner('TRIOSE 2 / 2', 'second triose — do it again', 'var(--amber)', 1.6);
+      molName='G3P'; molCarbons=3; }
+    else { pushBanner('TRIOSE 1 / 2', 'first triose down the lane', 'var(--cyan)', 1.5);
+      molName='G3P'; molCarbons=3; }
+  } else {
+    setMolFrom(SEQUENCE[seqPos]);
+    molName = STEPS[SEQUENCE[seqPos]].substrate;
+    molCarbons = STEPS[SEQUENCE[seqPos]].carbons===6 ? 6 : 3;
+  }
+  spawnRow();
+}
+function onWrong(){
+  const idx = gateRow.idx; const step = STEPS[idx];
+  const chosen = gateRow.gates[clamp(targetLane,0,LANES-1)].enzyme;
+  combo=0; wrongCount++;
+  atpMeter = clamp(atpMeter-1, 0, ATP_MAX); // penalty drains the survival resource
+  hitStop = opts.reduced ? 90 : 220;
+  shake = Math.min(shake+10, 16);
+  flash = {color:'rgba(255,92,108,.20)', t:0.3};
+  SFX.wrong();
+  teach = { wrong:chosen, right:step.enzyme, product:step.product, fact:step.fact, n:step.n, t:2.4 };
+  regulators.length=0; bossActive=false;
+  if(atpMeter<=0){ return killGame(); }
+  // retry the SAME step (you cannot progress without the right enzyme)
+  spawnRow();
+}
+
+function winGame(){
+  state='win'; bossActive=false; regulators.length=0;
+  if(!opts.reduced){ for(let i=0;i<3;i++) setTimeout(()=>burst(mol.x,mol.y,'#ffd24a',26), i*120); }
+  SFX.win();
+  if(score>store.best) store.best=score;
+  if(store.bestTime===0 || runTime<store.bestTime) store.bestTime=runTime;
+  store.runs++; saveStore();
+  showSummary(true);
+}
+function killGame(){
+  state='dead'; bossActive=false; regulators.length=0;
+  SFX.death(); shake=16; flash={color:'rgba(255,92,108,.30)', t:0.5};
+  if(score>store.best) store.best=score;
+  store.runs++; saveStore();
+  showSummary(false);
+}
+
+/* ============================================================
+   5. UPDATE
+   ============================================================ */
+let lastT=performance.now();
+function frame(now){
+  let dt=(now-lastT)/1000; lastT=now; dt=Math.min(dt,0.05);
+  update(dt);
+  render();
+  requestAnimationFrame(frame);
+}
+function update(dt){
+  // timers that always tick (effects)
+  if(shake>0) shake=Math.max(0, shake-dt*36);
+  if(flash){ flash.t-=dt; if(flash.t<=0) flash=null; }
+  if(banner){ banner.t-=dt; if(banner.t<=0) banner=null; }
+  if(teach){ teach.t-=dt; if(teach.t<=0) teach=null; }
+  if(speedPulse>0) speedPulse=Math.max(0,speedPulse-dt);
+  if(firstRunHintT>0) firstRunHintT-=dt;
+  updateParticles(dt); updatePopups(dt);
+
+  if(state!=='playing') return;
+  if(hitStop>0){ hitStop-=dt*1000; return; } // freeze the world during hit-stop
+  runTime+=dt;
+
+  // animate molecule toward intended lane
+  const tx=laneX[clamp(targetLane,0,LANES-1)];
+  mol.x += (tx-mol.x) * Math.min(1, dt*16);
+
+  // regulators (PFK-1 boss)
+  for(const r of regulators){
+    r.y += gateRow.speed*1.25*dt;
+    r.x += r.vx*dt;
+    if(r.x<r.r){r.x=r.r;r.vx*=-1;} if(r.x>W-r.r){r.x=W-r.r;r.vx*=-1;}
+    if(!r.dead && Math.abs(r.x-mol.x)<r.r+laneW*0.22 && Math.abs(r.y-mol.y)<r.r+34){
+      r.dead=true; applyRegulator(r);
+    }
+  }
+  regulators = regulators.filter(r=>!r.dead && r.y < H+40);
+
+  // gate row descent + resolution
+  if(gateRow && !gateRow.resolved){
+    gateRow.y += gateRow.speed*dt;
+    const center = gateRow.y + gateH/2;
+    if(center >= mol.y){ gateRow.resolved=true; resolveRow(); }
+  }
+}
+function applyRegulator(r){
+  if(r.good){ score+=60; combo++; maxCombo=Math.max(maxCombo,combo); speedPulse=0.4;
+    SFX.reg(true); burst(r.x,r.y,'#6cff9e',10);
+    popups.push({x:r.x,y:r.y,txt:'+'+r.label,t:0.9,color:'#6cff9e',vy:-40,size:18}); }
+  else { score=Math.max(0,score-30); shake=Math.min(shake+8,14);
+    if(gateRow) gateRow.speed*=0.82; // inhibitor slows the committed step
+    SFX.reg(false); flash={color:'rgba(255,92,108,.16)',t:0.22};
+    popups.push({x:r.x,y:r.y,txt:'−'+r.label,t:0.9,color:'#ff5c6c',vy:-40,size:18}); }
+}
+
+/* particles & popups */
+function burst(x,y,color,n){
+  if(opts.reduced){ n=Math.min(n,4); }
+  for(let i=0;i<n;i++){ const a=Math.random()*Math.PI*2, sp=60+Math.random()*220;
+    particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-40,life:0.6+Math.random()*0.4,age:0,color,r:2+Math.random()*3}); }
+}
+function spawnATP(gain, amt){
+  const n = opts.reduced?amt:amt*5;
+  for(let i=0;i<n;i++){
+    const tx = gain? W-laneW*0.5 : mol.x, ty = gain? hudH*0.5 : mol.y;
+    const sx = gain? mol.x : W-laneW*0.5, sy = gain? mol.y : hudH*0.5;
+    particles.push({x:sx,y:sy,vx:(tx-sx)*0.9+(Math.random()-0.5)*40,vy:(ty-sy)*0.9+(Math.random()-0.5)*40,
+      life:0.6,age:0,color:'#ffd24a',r:3.5,label:'ATP'}); }
+}
+function spawnNADH(amt){
+  const n=opts.reduced?2:10;
+  for(let i=0;i<n;i++){ const a=Math.random()*Math.PI*2;
+    particles.push({x:mol.x,y:mol.y,vx:Math.cos(a)*120,vy:Math.sin(a)*120-50,life:0.8,age:0,color:'#b98bff',r:4,label:i===0?'NADH':null}); }
+}
+function updateParticles(dt){
+  for(const p of particles){ p.age+=dt; p.x+=p.vx*dt; p.y+=p.vy*dt; p.vy+=260*dt; p.vx*=0.98; }
+  particles = particles.filter(p=>p.age<p.life);
+  if(particles.length>260) particles.splice(0, particles.length-260);
+}
+function pushBanner(text,sub,color,t){ banner={text,sub,color,t}; }
+function updatePopups(dt){ for(const p of popups){ p.t-=dt; p.y+=p.vy*dt; p.vy*=0.94; } popups=popups.filter(p=>p.t>0); }
+
+/* ============================================================
+   6. RENDER
+   ============================================================ */
+function render(){
+  ctx.clearRect(0,0,W,H);
+  // screen shake
+  let sx=0,sy=0;
+  if(shake>0 && !opts.reduced){ sx=(Math.random()-0.5)*shake; sy=(Math.random()-0.5)*shake; }
+  ctx.save(); ctx.translate(sx,sy);
+
+  drawBackground();
+  drawLanes();
+  if(state!=='menu'){
+    drawRegulators();
+    drawGateRow();
+    drawMolecule();
+  }
+  drawParticles();
+  drawPopups();
+  ctx.restore();
+
+  if(state!=='menu') drawHUD();
+  drawBanner();
+  drawTeach();
+  if(state==='playing' && firstRunHintT>0) drawHint();
+
+  if(flash){ ctx.fillStyle=flash.color; ctx.fillRect(0,0,W,H); }
+}
+
+let bgParticles=null;
+function drawBackground(){
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#06121b'); g.addColorStop(0.5,'#091c29'); g.addColorStop(1,'#0a2233');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  // phase tint
+  if(state==='playing'){
+    const sp=Math.min(seqPos,SEQUENCE.length-1);
+    const payoff = TRIOSE_OF[sp]>=1;
+    ctx.fillStyle = payoff ? 'rgba(255,179,71,.05)' : 'rgba(52,224,255,.04)';
+    ctx.fillRect(0,0,W,H);
+  }
+  if(opts.reduced) return;
+  if(!bgParticles){ bgParticles=[]; for(let i=0;i<40;i++) bgParticles.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*2+0.5,s:6+Math.random()*18}); }
+  ctx.fillStyle='rgba(120,200,235,.10)';
+  for(const p of bgParticles){ p.y+=p.s*0.016; if(p.y>H){p.y=-4;p.x=Math.random()*W;}
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,7); ctx.fill(); }
+}
+function drawLanes(){
+  ctx.strokeStyle='rgba(127,166,189,.12)'; ctx.lineWidth=1;
+  for(let i=1;i<LANES;i++){ ctx.beginPath(); ctx.moveTo(i*laneW,hudH); ctx.lineTo(i*laneW,H); ctx.stroke(); }
+  // the reaction line at the molecule (where gates resolve) — the "closing gap"
+  if(state==='playing'||state==='paused'){
+    ctx.strokeStyle='rgba(255,255,255,.12)'; ctx.setLineDash([6,8]); ctx.beginPath();
+    ctx.moveTo(0,mol.y); ctx.lineTo(W,mol.y); ctx.stroke(); ctx.setLineDash([]);
+  }
+}
+function roundRect(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+
+function drawGateRow(){
+  if(!gateRow) return;
+  const pad = Math.max(6, laneW*0.06);
+  for(const gobj of gateRow.gates){
+    const x = gobj.lane*laneW + pad, y=gateRow.y, w=laneW-pad*2, h=gateH;
+    // gate body — IDENTICAL look regardless of correctness (no color cheat)
+    const grad=ctx.createLinearGradient(0,y,0,y+h);
+    grad.addColorStop(0,'rgba(18,52,72,.96)'); grad.addColorStop(1,'rgba(10,30,44,.96)');
+    ctx.fillStyle=grad; roundRect(x,y,w,h,12); ctx.fill();
+    ctx.lineWidth=2; ctx.strokeStyle='rgba(52,224,255,.55)'; roundRect(x,y,w,h,12); ctx.stroke();
+    // glowing leading edge
+    ctx.fillStyle='rgba(52,224,255,.85)'; roundRect(x+8,y+h-6,w-16,4,2); ctx.fill();
+    // enzyme name (wrapped + auto-fit). Text carries the meaning → colorblind-safe.
+    ctx.fillStyle='#eafaff';
+    fitText(gobj.enzyme, x+w/2, y+h/2, w-16, h-22);
+  }
+}
+function fitText(text,cx,cy,maxW,maxH){
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  for(let fs=22; fs>=11; fs--){
+    ctx.font=`700 ${fs}px ui-sans-serif,system-ui,sans-serif`;
+    const lines=wrapText(text,maxW);
+    const totalH=lines.length*fs*1.18;
+    const fits = totalH<=maxH && lines.every(l=>ctx.measureText(l).width<=maxW);
+    if(fits || fs===11){
+      const startY=cy-(lines.length-1)*fs*0.59;
+      lines.forEach((l,i)=>ctx.fillText(l,cx,startY+i*fs*1.18));
+      return;
+    }
+  }
+}
+function wrapText(text,maxW){
+  const words=text.split(' '); const lines=[]; let cur='';
+  for(const w of words){ const test=cur?cur+' '+w:w;
+    if(ctx.measureText(test).width>maxW && cur){ lines.push(cur); cur=w; } else cur=test; }
+  if(cur) lines.push(cur); return lines;
+}
+function drawRegulators(){
+  for(const r of regulators){
+    ctx.save();
+    const col = r.good ? '#6cff9e' : '#ff5c6c';
+    ctx.shadowColor=col; ctx.shadowBlur=opts.reduced?0:14;
+    ctx.fillStyle = r.good ? 'rgba(108,255,158,.18)' : 'rgba(255,92,108,.18)';
+    ctx.beginPath(); ctx.arc(r.x,r.y,r.r,0,7); ctx.fill();
+    ctx.lineWidth=2; ctx.strokeStyle=col; ctx.beginPath(); ctx.arc(r.x,r.y,r.r,0,7); ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle='#eafaff'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.font='700 12px ui-sans-serif,system-ui,sans-serif'; ctx.fillText(r.label,r.x,r.y);
+    ctx.font='800 10px ui-sans-serif'; ctx.fillStyle=r.good?'#6cff9e':'#ff5c6c';
+    ctx.fillText(r.good?'+ activates':'− inhibits', r.x, r.y+r.r+9);
+  }
+}
+function drawMolecule(){
+  const x=mol.x,y=mol.y;
+  const baseCol = molColorPhase==='invest' ? '#34e0ff' : '#ffb347';
+  const R = clamp(laneW*0.20, 22, 40) * (1+speedPulse*0.18);
+  // trailing rush
+  if(!opts.reduced && speedPulse>0){ ctx.fillStyle='rgba(255,255,255,'+(speedPulse*0.10)+')';
+    for(let i=1;i<=3;i++){ ctx.beginPath(); ctx.arc(x,y+i*10,R*(1-i*0.12),0,7); ctx.fill(); } }
+  ctx.save(); ctx.shadowColor=baseCol; ctx.shadowBlur=opts.reduced?0:24;
+  const g=ctx.createRadialGradient(x-R*0.3,y-R*0.3,2,x,y,R);
+  g.addColorStop(0,'#ffffff'); g.addColorStop(0.3,baseCol); g.addColorStop(1, molColorPhase==='invest'?'#0d5d77':'#7a4a14');
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,R,0,7); ctx.fill(); ctx.restore();
+  // carbon count
+  ctx.fillStyle='#06121b'; ctx.font=`900 ${Math.round(R*0.72)}px ui-sans-serif,system-ui`;
+  ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('C'+molCarbons,x,y);
+  // name pill below
+  ctx.font='800 14px ui-sans-serif,system-ui,sans-serif';
+  const tw=ctx.measureText(molName).width, pw=tw+22;
+  ctx.fillStyle='rgba(6,18,27,.9)'; roundRect(x-pw/2,y+R+8,pw,24,12); ctx.fill();
+  ctx.strokeStyle=baseCol; ctx.lineWidth=1.5; roundRect(x-pw/2,y+R+8,pw,24,12); ctx.stroke();
+  ctx.fillStyle='#eafaff'; ctx.fillText(molName,x,y+R+20);
+}
+function drawParticles(){
+  for(const p of particles){
+    const a=1-p.age/p.life; ctx.globalAlpha=Math.max(0,a);
+    ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,7); ctx.fill();
+    if(p.label){ ctx.globalAlpha=Math.max(0,a); ctx.fillStyle=p.color;
+      ctx.font='800 10px ui-sans-serif'; ctx.textAlign='center'; ctx.fillText(p.label,p.x,p.y-8); }
+  }
+  ctx.globalAlpha=1;
+}
+function drawPopups(){
+  for(const p of popups){ ctx.globalAlpha=Math.min(1,p.t*1.6); ctx.fillStyle=p.color;
+    ctx.font=`900 ${p.size||20}px ui-sans-serif,system-ui`; ctx.textAlign='center';
+    ctx.fillText(p.txt,p.x,p.y); }
+  ctx.globalAlpha=1;
+}
+
+/* HUD */
+function drawHUD(){
+  ctx.fillStyle='rgba(4,12,18,.82)'; ctx.fillRect(0,0,W,hudH);
+  ctx.fillStyle='rgba(52,224,255,.5)'; ctx.fillRect(0,hudH-1.5,W,1.5);
+  const pad=12; let y=hudH*0.32;
+  ctx.textBaseline='middle';
+
+  // LEFT: step + substrate prompt (clamp: seqPos can sit at length after a win)
+  const sp = Math.min(seqPos, SEQUENCE.length-1);
+  const idx = SEQUENCE[sp], step=STEPS[idx], tri=TRIOSE_OF[sp];
+  ctx.textAlign='left'; ctx.fillStyle='#7fa6bd'; ctx.font='700 11px ui-sans-serif';
+  const phaseLbl = tri===0 ? 'INVESTMENT' : ('PAYOFF · TRIOSE '+tri+'/2');
+  ctx.fillText(phaseLbl, pad, y-2);
+  ctx.fillStyle='#eafaff'; ctx.font='800 16px ui-sans-serif';
+  ctx.fillText('Step '+step.n+'/10  ·  you are '+step.substrate, pad, hudH*0.66);
+
+  // step pips
+  const pipY=hudH-9, pipW=Math.min(14, (W*0.42)/10);
+  for(let i=0;i<10;i++){ const px=pad+i*(pipW); const done=i<step.n-1;
+    ctx.fillStyle= i===step.n-1 ? '#ffd24a' : (done?'#34e0ff':'rgba(127,166,189,.3)');
+    ctx.beginPath(); ctx.arc(px+pipW/2, pipY, 2.6, 0,7); ctx.fill();
+    if(i===2||i===9){ ctx.fillStyle='rgba(255,179,71,.6)'; ctx.fillRect(px+pipW/2-3,pipY+5,6,1.5);} }
+
+  // RIGHT: score + time
+  ctx.textAlign='right'; ctx.fillStyle='#eafaff'; ctx.font='900 20px ui-sans-serif';
+  ctx.fillText(score.toLocaleString(), W-pad, y);
+  ctx.fillStyle='#7fa6bd'; ctx.font='700 12px ui-sans-serif';
+  ctx.fillText(runTime.toFixed(1)+'s', W-pad, hudH*0.66);
+
+  // CENTER: ATP meter + NADH + combo
+  const cx=W/2;
+  // ATP cells
+  const cells=ATP_MAX, cw=Math.min(13,(W*0.34)/cells), ch=8, totalW=cells*cw, startX=cx-totalW/2, my=hudH*0.30;
+  for(let i=0;i<cells;i++){ const filled=i<Math.round(atpMeter);
+    ctx.fillStyle= filled ? (atpMeter<=2?'#ff5c6c':'#ffd24a') : 'rgba(127,166,189,.22)';
+    roundRect(startX+i*cw,my,cw-2,ch,2); ctx.fill(); }
+  ctx.textAlign='center'; ctx.fillStyle='#ffd24a'; ctx.font='800 11px ui-sans-serif';
+  ctx.fillText('ATP '+Math.round(atpMeter), cx, my-7);
+  // NADH + combo line
+  ctx.font='800 12px ui-sans-serif';
+  ctx.fillStyle='#b98bff'; ctx.textAlign='right'; ctx.fillText('NADH '+ledger.nadh, cx-6, hudH*0.74);
+  const mult=comboMult(combo);
+  ctx.textAlign='left'; ctx.fillStyle = combo>=3?'#6cff9e':'#7fa6bd';
+  ctx.fillText('combo '+combo+'  ×'+mult, cx+6, hudH*0.74);
+}
+
+function drawBanner(){
+  if(!banner) return;
+  const a=Math.min(1,banner.t*1.4);
+  ctx.globalAlpha=a; ctx.textAlign='center';
+  ctx.font='900 clamp(20px,5vw,34px) ui-sans-serif,system-ui';
+  ctx.fillStyle=cssVar(banner.color);
+  ctx.fillText(banner.text, W/2, H*0.30);
+  if(banner.sub){ ctx.font='700 13px ui-sans-serif'; ctx.fillStyle='#9fc4d8';
+    ctx.fillText(banner.sub, W/2, H*0.30+26); }
+  ctx.globalAlpha=1;
+}
+function drawTeach(){
+  if(!teach) return;
+  const a=Math.min(1,teach.t*1.2);
+  const w=Math.min(W*0.92, 460), x=W/2-w/2, h=128, y=mol.y-h-60;
+  ctx.globalAlpha=a;
+  ctx.fillStyle='rgba(20,6,10,.95)'; roundRect(x,y,w,h,14); ctx.fill();
+  ctx.strokeStyle='#ff5c6c'; ctx.lineWidth=2; roundRect(x,y,w,h,14); ctx.stroke();
+  ctx.textAlign='left'; ctx.textBaseline='top';
+  ctx.fillStyle='#ff5c6c'; ctx.font='800 15px ui-sans-serif';
+  ctx.fillText('✗ '+teach.wrong+' — wrong enzyme', x+14, y+12);
+  ctx.fillStyle='#6cff9e'; ctx.font='800 15px ui-sans-serif';
+  ctx.fillText('✓ Step '+teach.n+': '+teach.right+' → '+teach.product, x+14, y+38);
+  ctx.fillStyle='#dff3ff'; ctx.font='600 12.5px ui-sans-serif';
+  wrapPanel(teach.fact, x+14, y+64, w-28, 16);
+  ctx.globalAlpha=1; ctx.textBaseline='alphabetic';
+}
+function wrapPanel(text,x,y,maxW,lh){
+  ctx.font='600 12.5px ui-sans-serif'; const lines=wrapText(text,maxW);
+  ctx.textAlign='left'; lines.slice(0,3).forEach((l,i)=>ctx.fillText(l,x,y+i*lh));
+}
+function drawHint(){
+  const a=Math.min(1,firstRunHintT);
+  ctx.globalAlpha=a*0.9; ctx.textAlign='center'; ctx.fillStyle='#9fc4d8';
+  ctx.font='700 14px ui-sans-serif';
+  ctx.fillText('◀ ▶ / A D / tap a lane — steer into the right enzyme', W/2, mol.y-mol.y*0.18);
+  ctx.globalAlpha=1;
+}
+function cssVar(v){ if(v&&v.startsWith('var(')){ const name=v.slice(4,-1).trim();
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim()||'#fff'; } return v||'#fff'; }
+
+/* ============================================================
+   7. INPUT — keyboard + pointer/touch (both first-class)
+   ============================================================ */
+function moveLane(dir){ if(state!=='playing') return; targetLane=clamp(targetLane+dir,0,LANES-1); SFX.click(); }
+window.addEventListener('keydown', e=>{
+  audioInit();
+  const k=e.key.toLowerCase();
+  if(k==='arrowleft'||k==='a'){ moveLane(-1); e.preventDefault(); }
+  else if(k==='arrowright'||k==='d'){ moveLane(1); e.preventDefault(); }
+  else if(k==='p'||k==='escape'){ if(state==='playing') doPause(); else if(state==='paused') doResume(); }
+  else if(k==='m'){ toggleSound(); }
+  else if(k==='enter'||k===' '){
+    if(state==='menu'||state==='dead'||state==='win'){ startGame(); e.preventDefault(); }
+    else if(state==='paused'){ doResume(); }
+  }
+});
+// Pointer steering: touch the lane you want (drag to keep steering). Works for mouse + touch.
+let pointerDown=false;
+function laneAtX(x){ return clamp(Math.floor(x/laneW),0,LANES-1); }
+canvas.addEventListener('pointerdown', e=>{
+  audioInit();
+  if(state==='menu'||state==='dead'||state==='win'){ /* overlays own these clicks */ return; }
+  if(state==='playing'){ pointerDown=true; targetLane=laneAtX(e.clientX); SFX.click(); canvas.setPointerCapture(e.pointerId); }
+});
+canvas.addEventListener('pointermove', e=>{ if(pointerDown && state==='playing'){ const l=laneAtX(e.clientX); if(l!==targetLane) targetLane=l; }});
+canvas.addEventListener('pointerup', ()=>{ pointerDown=false; });
+canvas.addEventListener('pointercancel', ()=>{ pointerDown=false; });
+
+/* ============================================================
+   8. SCREENS / UI wiring
+   ============================================================ */
+const $=id=>document.getElementById(id);
+function hideAll(){ ['menuScreen','pauseScreen','summaryScreen'].forEach(i=>$(i).classList.add('hidden')); }
+function showMenu(){ state='menu'; hideAll(); $('menuScreen').classList.remove('hidden'); updateBestLine(); $('startBtn').focus(); }
+function doPause(){ if(state!=='playing')return; state='paused'; $('pauseScreen').classList.remove('hidden'); SFX.click(); $('resumeBtn').focus(); }
+function doResume(){ if(state!=='paused')return; state='playing'; $('pauseScreen').classList.add('hidden'); lastT=performance.now(); }
+function updateBestLine(){
+  const t = store.bestTime? (' · best time '+store.bestTime.toFixed(1)+'s'):'';
+  $('bestLine').textContent = (store.best? ('Best score '+store.best.toLocaleString()+t) : 'No runs yet — set the first record.')
+    + (storageOK? '' : '  (scores held in memory — storage blocked)');
+}
+function showSummary(won){
+  hideAll();
+  const net = ledger.made - ledger.spent;
+  $('sumTitle').textContent = won ? 'PYRUVATE ×2 — PATHWAY COMPLETE' : 'METABOLIC STALL — out of ATP';
+  $('sumGrade').textContent = won ? gradeRun() : '—';
+  $('sumGrade').style.color = won ? 'var(--gold)' : 'var(--red)';
+  $('sumATP').textContent = (net>=0?'+':'')+net+' ATP';
+  $('sumATPdetail').textContent = 'made '+ledger.made+' − spent '+ledger.spent;
+  $('sumNADH').textContent = '+'+ledger.nadh+' NADH';
+  $('sumPyr').textContent = ledger.pyr+' Pyruvate';
+  $('sumScore').textContent = score.toLocaleString();
+  $('sumTime').textContent = runTime.toFixed(1)+'s';
+  $('sumCombo').textContent = '×'+maxCombo;
+  $('sumMiss').textContent = wrongCount;
+  if(won){
+    $('sumSubtitle').textContent = 'Net +2 ATP, +2 NADH, 2 pyruvate per glucose. You ran the whole pathway.';
+    $('sumHook').innerHTML = '<b>Pyruvate’s fate:</b> aerobic → acetyl-CoA → TCA cycle. '
+      + 'Anaerobic → lactate (LDH) or ethanol (yeast) — both regenerate NAD⁺, which glycolysis needs to keep running. '
+      + 'If NAD⁺ runs out, glycolysis halts. (Sequel level.)';
+  } else {
+    const idx=SEQUENCE[seqPos], step=STEPS[idx];
+    $('sumSubtitle').textContent = 'You stalled at step '+step.n+' ('+step.substrate+').';
+    $('sumHook').innerHTML = '<b>Next move was:</b> '+step.enzyme+' → '+step.product+'. '+step.fact;
+  }
+  const t = store.bestTime? (' · best '+store.bestTime.toFixed(1)+'s'):'';
+  $('sumBest').textContent = 'Best '+store.best.toLocaleString()+t + (storageOK?'':' (memory only)');
+  $('summaryScreen').classList.remove('hidden');
+  $('againBtn').focus();
+}
+function gradeRun(){
+  if(wrongCount===0 && runTime<24) return 'S';
+  if(wrongCount<=1) return 'A';
+  if(wrongCount<=3) return 'B';
+  if(wrongCount<=6) return 'C';
+  return 'D';
+}
+
+/* options */
+function toggleSound(){ opts.sound=!opts.sound; if(opts.sound){ audioInit(); SFX.click(); } syncOptionUI(); }
+function toggleMotion(){ opts.reduced=!opts.reduced; syncOptionUI(); }
+function syncOptionUI(){
+  const s=opts.sound, snd='🔊 Sound: '+(s?'On':'Off'), m='✨ Motion: '+(opts.reduced?'Reduced':'Full');
+  [$('soundToggle'),$('soundToggle2')].forEach(b=>{ if(b){ b.textContent = b.id==='soundToggle'? snd : (s?'🔊 Sound':'🔇 Sound'); b.setAttribute('aria-pressed',String(s)); }});
+  [$('motionToggle'),$('motionToggle2')].forEach(b=>{ if(b){ b.textContent = b.id==='motionToggle'? m : '✨ Motion'; b.setAttribute('aria-pressed',String(opts.reduced)); }});
+}
+
+// button wiring
+$('startBtn').onclick=()=>{ SFX.click(); startGame(); };
+$('againBtn').onclick=()=>{ SFX.click(); startGame(); };
+$('resumeBtn').onclick=()=>doResume();
+$('pauseRestartBtn').onclick=()=>{ SFX.click(); startGame(); };
+$('pauseMenuBtn').onclick=()=>showMenu();
+$('sumMenuBtn').onclick=()=>showMenu();
+$('soundToggle').onclick=toggleSound; $('soundToggle2').onclick=toggleSound;
+$('motionToggle').onclick=toggleMotion; $('motionToggle2').onclick=toggleMotion;
+
+/* ============================================================
+   9. UTIL + BOOT
+   ============================================================ */
+function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+resize();
+syncOptionUI();
+updateBestLine();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
