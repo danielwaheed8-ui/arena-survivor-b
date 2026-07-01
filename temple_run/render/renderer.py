@@ -323,18 +323,19 @@ class Renderer:
 
         # Shadow shrinks and fades as the player rises.
         lift = h_px(scale, player.y)
-        shadow_w = w_px(scale, 900) * (1.0 - clamp(player.y / 1400.0, 0, 0.6))
+        shadow_w = w_px(scale, 560) * (1.0 - clamp(player.y / 1400.0, 0, 0.6))
         shadow_h = shadow_w * 0.32
         if shadow_w > 2:
             shadow = pygame.Surface((int(shadow_w), int(shadow_h) + 1), pygame.SRCALPHA)
             pygame.draw.ellipse(shadow, (0, 0, 0, 110), shadow.get_rect())
             surface.blit(shadow, (int(base_x - shadow_w / 2), int(base_y - shadow_h / 2)))
 
-        # Body metrics.
+        # Body metrics. Kept modest so the avatar frames in the lower-centre and
+        # never occludes the obstacles it is about to reach.
         sliding = player.state == PlayerState.SLIDING
         dead = player.state == PlayerState.DEAD
-        body_h = h_px(scale, 900 if not sliding else 420)
-        body_w = w_px(scale, 520 if not sliding else 760)
+        body_h = h_px(scale, 560 if not sliding else 300)
+        body_w = w_px(scale, 340 if not sliding else 520)
         if body_h < 4:
             return
         feet_y = base_y - lift
@@ -377,11 +378,13 @@ class Renderer:
                                              arm_w, int(body_h * 0.34)))
 
         # Head.
-        head_r = w_px(scale, 300)
+        head_r = w_px(scale, 150)
         if head_r >= 2:
             hx = cx + skew * 1.3
-            hy = top_y - head_r * 0.7
+            hy = top_y - head_r * 0.8
             pygame.draw.circle(surface, Palette.SKIN, (int(hx), int(hy)), int(head_r))
+            pygame.draw.circle(surface, shade_color(Palette.SKIN, 0.7),
+                               (int(hx), int(hy)), int(head_r), max(1, int(head_r * 0.12)))
             # A little headband to read direction.
-            pygame.draw.rect(surface, col, (int(hx - head_r), int(hy - head_r * 0.4),
-                                            int(head_r * 2), max(2, int(head_r * 0.35))))
+            pygame.draw.rect(surface, col, (int(hx - head_r), int(hy - head_r * 0.35),
+                                            int(head_r * 2), max(2, int(head_r * 0.4))))

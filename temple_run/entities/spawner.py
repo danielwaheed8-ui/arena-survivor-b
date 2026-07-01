@@ -60,6 +60,9 @@ class Spawner:
         self._next_z = 0.0
         self._safe_lane = 0
         self._prev_safe_pose = False
+        # Base value stamped on every coin (the shop's coin-value upgrade raises
+        # this at run start). Kept here so economy tuning has one clean hook.
+        self.coin_value = 1
 
     # ---------------------------------------------------------------- lifecycle
     def reset(self, start_z: float = 0.0) -> None:
@@ -201,7 +204,7 @@ class Spawner:
         step = TCfg.SEGMENT_LENGTH * 2.0
         for i in range(count):
             c = self.coins.acquire()
-            c.configure(lane, z + i * step, 1)
+            c.configure(lane, z + i * step, self.coin_value)
             c.phase = self.rng.range(0.0, 6.28)
             self.entities.append(c)
 
@@ -211,7 +214,7 @@ class Spawner:
         n = 7
         for i in range(n):
             c = self.coins.acquire()
-            c.configure(lane, z - step * 2 + i * step, 1)
+            c.configure(lane, z - step * 2 + i * step, self.coin_value)
             t = i / (n - 1)
             if over_kind == "barrier":
                 # Parabolic arc up and over.
