@@ -5,8 +5,7 @@ name: Deploy game to GitHub Pages
 
 on:
   push:
-    branches: ["claude/temple-run-game-arch-2cx1an"]
-    paths: ["docs/**", ".github/workflows/deploy-pages.yml"]
+    branches: ["master", "claude/temple-run-game-arch-2cx1an"]
   workflow_dispatch: {}
 
 permissions:
