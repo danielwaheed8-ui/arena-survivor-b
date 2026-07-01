@@ -10,3 +10,8 @@ __pycache__/
 # Temple Run runtime save/settings files
 temple_run_save.json
 temple_run_settings.json
+
+# pygbag / WASM build staging + output
+webbuild/
+build/
+*.apk

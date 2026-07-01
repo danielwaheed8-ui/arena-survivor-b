@@ -27,7 +27,11 @@ def _font(size: int, bold: bool = False) -> pygame.font.Font:
     key = (size, bold)
     f = _FONT_CACHE.get(key)
     if f is None:
-        f = pygame.font.SysFont("Arial", size, bold=bold)
+        try:
+            f = pygame.font.SysFont("Arial", size, bold=bold)
+        except Exception:
+            # Browser / headless without system fonts: use the bundled default.
+            f = pygame.font.Font(None, size)
         _FONT_CACHE[key] = f
     return f
 

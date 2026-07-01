@@ -26,13 +26,24 @@ from .core.events import Event, EventBus, EventType
 from .mathutils import RNG
 
 
+# Running inside a browser via pygbag / Emscripten? A few things differ there:
+# there is no real audio mixer worth spinning up, system fonts are absent, and
+# Python-in-WASM is slower, so we trim the draw distance for a smoother frame.
+IS_WEB = (sys.platform == "emscripten")
+
+
 class Game:
     def __init__(self) -> None:
         pygame.init()
-        try:
-            pygame.mixer.pre_init(44100, -16, 2, 512)
-        except Exception:
-            pass
+        if not IS_WEB:
+            try:
+                pygame.mixer.pre_init(44100, -16, 2, 512)
+            except Exception:
+                pass
+        else:
+            # Lighter render load for the WASM build.
+            from .config import Cam
+            Cam.DRAW_DISTANCE = min(Cam.DRAW_DISTANCE, 150)
         self.screen = pygame.display.set_mode((Config.WIDTH, Config.HEIGHT))
         pygame.display.set_caption(Config.TITLE)
         self.clock = pygame.time.Clock()
@@ -83,6 +94,11 @@ class Game:
             return None
 
     def _make_audio(self):
+        # Skip procedural audio synthesis in the browser build: the mixer is
+        # unreliable under Emscripten and generating the sound buffers in WASM
+        # would stall startup for seconds. The game runs silent there.
+        if IS_WEB:
+            return None
         try:
             from .audio.engine import AudioEngine
             get_sfx = (lambda: self.settings.sfx_volume) if self.settings else None
@@ -193,6 +209,33 @@ class Game:
             pygame.display.flip()
         self._shutdown()
 
+    async def run_async(self) -> None:
+        """Cooperative main loop for the browser (pygbag) build.
+
+        Identical to :meth:`run` but yields to the event loop each frame via
+        ``await asyncio.sleep(0)`` so the browser stays responsive. Works on the
+        desktop too, so a single async entry point serves both targets.
+        """
+        import asyncio
+        while self.running:
+            dt = self.clock.tick(Config.FPS) / 1000.0
+            dt = min(dt, Config.MAX_DT)
+            self._handle_events()
+            if not self.running:
+                break
+            self._update(dt)
+            self._draw()
+            pygame.display.flip()
+            await asyncio.sleep(0)
+        self._shutdown()
+
+    def one_frame(self, dt: float) -> None:
+        """Advance and draw a single frame (handy for tests / embedding)."""
+        self._handle_events()
+        self._update(dt)
+        self._draw()
+        pygame.display.flip()
+
     def _handle_events(self) -> None:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -232,6 +275,12 @@ def main() -> None:
     game = Game()
     game.run()
     sys.exit(0)
+
+
+async def amain() -> None:
+    """Async entry used by the browser (pygbag) build and by ``main.py``."""
+    game = Game()
+    await game.run_async()
 
 
 if __name__ == "__main__":
