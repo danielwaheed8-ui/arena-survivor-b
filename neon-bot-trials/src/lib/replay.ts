@@ -1,3 +1,4 @@
+import { validateDesign } from './robots';
 import type { DrawBodyDesc, ReplayData, ReplayFrame } from './types';
 
 /**
@@ -67,7 +68,12 @@ export function validateReplay(input: unknown): input is ReplayData {
   if (typeof r.runId !== 'string' || typeof r.arenaId !== 'string') return false;
   if (!Array.isArray(r.bodies) || !Array.isArray(r.frames)) return false;
   if (typeof r.sampleHz !== 'number' || r.sampleHz <= 0) return false;
-  if (!r.design || typeof r.design !== 'object') return false;
+  if (!validateDesign(r.design).ok) return false;
+  if (!(r.bodies as DrawBodyDesc[]).every((b) => b && typeof b.role === 'string' && typeof b.w === 'number' && typeof b.r === 'number')) {
+    return false;
+  }
   const stride = (r.bodies as DrawBodyDesc[]).length * 3 + 1;
-  return (r.frames as ReplayFrame[]).every((f) => Array.isArray(f) && f.length === stride);
+  return (r.frames as ReplayFrame[]).every(
+    (f) => Array.isArray(f) && f.length === stride && f.every((n) => typeof n === 'number'),
+  );
 }

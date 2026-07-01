@@ -15,8 +15,10 @@ export default defineConfig({
   testDir: '.',
   testMatch: 'visual-qa.spec.ts',
   outputDir: './test-results',
+  // One worker: parallel headless browsers contend for rAF time on small CI
+  // boxes, which can starve canvas paints and flake the paint assertions.
   fullyParallel: false,
-  workers: 2,
+  workers: 1,
   timeout: 90_000,
   reporter: [['list'], ['json', { outputFile: 'artifacts/results.json' }]],
   use: {

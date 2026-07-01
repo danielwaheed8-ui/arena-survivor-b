@@ -179,22 +179,37 @@ export function saveReplay(replay: ReplayData, store: KVStore | null = defaultSt
   const runs = loadRuns(store);
   const withReplay = runs.filter((r) => r.hasReplay);
   const existing = new Set(replayKeys(store));
+  const prunedRunIds = new Set<string>();
   let kept = 0;
   for (const run of withReplay) {
     const key = KEYS.replayPrefix + run.id;
     if (!existing.has(key)) continue;
     kept += 1;
-    if (kept >= MAX_REPLAYS) store.removeItem(key);
+    if (kept >= MAX_REPLAYS) {
+      store.removeItem(key);
+      prunedRunIds.add(run.id);
+    }
   }
-  const ok = writeJson(store, KEYS.replayPrefix + replay.runId, replay);
+  let ok = writeJson(store, KEYS.replayPrefix + replay.runId, replay);
   if (!ok) {
     // Quota pressure: drop all other replays and retry once.
     for (const key of replayKeys(store)) {
-      if (key !== KEYS.replayPrefix + replay.runId) store.removeItem(key);
+      if (key !== KEYS.replayPrefix + replay.runId) {
+        store.removeItem(key);
+        prunedRunIds.add(key.slice(KEYS.replayPrefix.length));
+      }
     }
-    return writeJson(store, KEYS.replayPrefix + replay.runId, replay);
+    ok = writeJson(store, KEYS.replayPrefix + replay.runId, replay);
   }
-  return true;
+  // Keep run records honest about replay availability after pruning.
+  if (prunedRunIds.size > 0) {
+    writeJson(
+      store,
+      KEYS.runs,
+      runs.map((r) => (prunedRunIds.has(r.id) ? { ...r, hasReplay: false } : r)),
+    );
+  }
+  return ok;
 }
 
 export function loadReplay(runId: string, store: KVStore | null = defaultStore()): ReplayData | null {

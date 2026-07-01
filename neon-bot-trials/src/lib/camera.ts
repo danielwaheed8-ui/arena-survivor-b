@@ -55,9 +55,16 @@ export class Camera {
     return { x: this.x + sx, y: this.y + sy, zoom: this.zoom };
   }
 
-  applyTo(ctx: CanvasRenderingContext2D, viewW: number, viewH: number): void {
+  /**
+   * Applies the camera transform on top of `base` (the canvas' DPR transform).
+   * Resetting to identity instead would draw CSS-pixel coordinates in device
+   * pixels — everything shrinks on hiDPI screens.
+   */
+  applyTo(ctx: CanvasRenderingContext2D, viewW: number, viewH: number, base?: DOMMatrix): void {
     const { x, y, zoom } = this.effective();
-    ctx.setTransform(zoom, 0, 0, zoom, viewW / 2 - x * zoom, viewH / 2 - y * zoom);
+    if (base) ctx.setTransform(base);
+    else ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.transform(zoom, 0, 0, zoom, viewW / 2 - x * zoom, viewH / 2 - y * zoom);
   }
 
   screenToWorld(sx: number, sy: number, viewW: number, viewH: number): { x: number; y: number } {

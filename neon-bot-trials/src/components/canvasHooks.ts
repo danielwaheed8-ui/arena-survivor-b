@@ -64,10 +64,12 @@ export function useRafLoop(callback: (dt: number) => void, active = true): void 
     let raf = 0;
     let last = performance.now();
     const loop = (now: number) => {
-      const dt = Math.min(0.1, (now - last) / 1000);
+      // Re-arm BEFORE the callback so an exception can't kill the loop, and
+      // clamp dt ≥ 0 — the first rAF timestamp can precede performance.now().
+      raf = requestAnimationFrame(loop);
+      const dt = Math.max(0, Math.min(0.1, (now - last) / 1000));
       last = now;
       cbRef.current(dt);
-      raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);

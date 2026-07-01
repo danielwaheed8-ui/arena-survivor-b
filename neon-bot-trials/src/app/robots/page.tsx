@@ -24,8 +24,13 @@ export default function RobotsPage() {
 
   const refresh = () => setRobots(loadRobots());
 
-  const openInBuilder = (robot: RobotDesign) => {
-    setDesign(cloneDesign(robot, robot.name));
+  // Presets get a fresh identity (saving one must not shadow the factory
+  // design); saved robots keep their id so Save updates them in place.
+  const loadForUse = (robot: RobotDesign, isPreset: boolean): RobotDesign =>
+    isPreset ? cloneDesign(robot, robot.name) : (JSON.parse(JSON.stringify(robot)) as RobotDesign);
+
+  const openInBuilder = (robot: RobotDesign, isPreset: boolean) => {
+    setDesign(loadForUse(robot, isPreset));
     router.push('/builder');
   };
 
@@ -45,14 +50,14 @@ export default function RobotsPage() {
           {robot.parts.length} parts · {totalMass(robot).toFixed(1)}u · {batteryCapacity(robot)}⚡
         </p>
         <div className="mt-3 flex flex-wrap gap-1.5">
-          <Button size="sm" onClick={() => openInBuilder(robot)}>
+          <Button size="sm" onClick={() => openInBuilder(robot, isPreset)}>
             Edit
           </Button>
           <Button
             size="sm"
             variant="accent"
             onClick={() => {
-              setDesign(cloneDesign(robot, robot.name));
+              setDesign(loadForUse(robot, isPreset));
               router.push('/simulate');
             }}
           >

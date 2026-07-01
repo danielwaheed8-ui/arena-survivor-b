@@ -173,9 +173,11 @@ const ARENA_LIST: ArenaDef[] = [
     ],
     movingPlatforms: [],
     windZones: [
-      { x: 480, y: 300, w: 420, h: 340, fx: -0.32, fy: 0, gust: 0.4, gustPeriod: 2.2 },
-      { x: 1150, y: 300, w: 420, h: 340, fx: 0.6, fy: 0, gust: 0.6, gustPeriod: 1.6 },
-      { x: 1800, y: 260, w: 440, h: 380, fx: -0.28, fy: -0.5, gust: 0.5, gustPeriod: 2.8 },
+      // Zone bottoms sit on the floor (y + h/2 = 600) so grounded robots
+      // are actually inside the force field.
+      { x: 480, y: 430, w: 420, h: 340, fx: -0.32, fy: 0, gust: 0.4, gustPeriod: 2.2 },
+      { x: 1150, y: 430, w: 420, h: 340, fx: 0.6, fy: 0, gust: 0.6, gustPeriod: 1.6 },
+      { x: 1800, y: 410, w: 440, h: 380, fx: -0.28, fy: -0.5, gust: 0.5, gustPeriod: 2.8 },
     ],
     gravityZones: [],
     seesaws: [],

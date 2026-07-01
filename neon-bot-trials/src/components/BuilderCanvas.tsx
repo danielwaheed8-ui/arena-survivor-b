@@ -111,11 +111,13 @@ export function BuilderCanvas({
     canvas.addEventListener('pointerdown', onPointerDown);
     canvas.addEventListener('pointermove', onPointerMove);
     canvas.addEventListener('pointerup', onPointerUp);
+    canvas.addEventListener('pointercancel', onPointerUp);
     canvas.addEventListener('pointerleave', onLeave);
     return () => {
       canvas.removeEventListener('pointerdown', onPointerDown);
       canvas.removeEventListener('pointermove', onPointerMove);
       canvas.removeEventListener('pointerup', onPointerUp);
+      canvas.removeEventListener('pointercancel', onPointerUp);
       canvas.removeEventListener('pointerleave', onLeave);
     };
   }, [mode, onPlace, onSelect, onMovePart, toWorld, hitTest]);
@@ -139,8 +141,9 @@ export function BuilderCanvas({
       dt,
     );
 
-    // Overlay: anchor markers, selection ring, placement ghost
-    cameraRef.current.applyTo(ctx, width, height);
+    // Overlay: anchor markers, selection ring, placement ghost.
+    // render() restored the DPR base transform; compose the camera on top.
+    cameraRef.current.applyTo(ctx, width, height, ctx.getTransform());
 
     // Attachment envelope
     const maxX = design.chassis.width / 2 + 10;

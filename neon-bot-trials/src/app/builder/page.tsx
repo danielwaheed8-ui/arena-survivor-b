@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { BuilderCanvas, type BuilderMode } from '@/components/BuilderCanvas';
 import { Badge, Button, Panel, Slider, Stat } from '@/components/ui';
 import { ARENAS } from '@/lib/arenas';
@@ -35,12 +35,20 @@ export default function BuilderPage() {
   const [mode, setMode] = useState<BuilderMode>({ kind: 'select' });
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [notice, setNotice] = useState<{ text: string; tone: 'ok' | 'err' } | null>(null);
+  const noticeTimer = useRef<number | null>(null);
 
   useEffect(() => hydrate(), [hydrate]);
+  useEffect(
+    () => () => {
+      if (noticeTimer.current) window.clearTimeout(noticeTimer.current);
+    },
+    [],
+  );
 
   const flash = useCallback((text: string, tone: 'ok' | 'err' = 'ok') => {
+    if (noticeTimer.current) window.clearTimeout(noticeTimer.current);
     setNotice({ text, tone });
-    window.setTimeout(() => setNotice(null), 2600);
+    noticeTimer.current = window.setTimeout(() => setNotice(null), 2600);
   }, []);
 
   const selected = design.parts.find((p) => p.id === selectedId) ?? null;

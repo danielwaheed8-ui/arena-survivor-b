@@ -61,6 +61,7 @@ function SimulatePageInner() {
     score: ScoreBreakdown;
     runId: string;
     replaySaved: boolean;
+    runSaved: boolean;
   } | null>(null);
 
   const status: SimStatus = sample?.status ?? 'ready';
@@ -91,8 +92,14 @@ function SimulatePageInner() {
         score,
         hasReplay: replaySaved,
       };
-      saveRun(record);
-      setResults({ telemetry: result.telemetry, score, runId, replaySaved });
+      const runSaved = saveRun(record);
+      setResults({
+        telemetry: result.telemetry,
+        score,
+        runId,
+        replaySaved: replaySaved && runSaved,
+        runSaved,
+      });
     },
     [arena],
   );
@@ -358,7 +365,9 @@ function SimulatePageInner() {
               {formatScore(results.score.total)}
             </div>
             <p className="mt-1 text-center text-[11px] uppercase tracking-widest text-slate-500">
-              Final Score · saved to leaderboard
+              {results.runSaved
+                ? 'Final Score · saved to leaderboard'
+                : 'Final Score · storage full — run not archived'}
             </p>
 
             <ul className="mt-4 space-y-1.5 border-t border-white/[0.07] pt-4 text-xs">

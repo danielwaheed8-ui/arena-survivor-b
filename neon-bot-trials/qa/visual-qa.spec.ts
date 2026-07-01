@@ -45,6 +45,16 @@ async function canvasColorCount(page: Page, testId: string): Promise<number> {
   }, testId);
 }
 
+/** Polls until the canvas paints at least `min` distinct colors (or times out). */
+async function expectCanvasPainted(page: Page, testId: string, min: number): Promise<void> {
+  await expect
+    .poll(() => canvasColorCount(page, testId), {
+      message: `canvas ${testId} paints > ${min} colors`,
+      timeout: 15_000,
+    })
+    .toBeGreaterThan(min);
+}
+
 function collectErrors(page: Page): string[] {
   const errors: string[] = [];
   page.on('pageerror', (err) => errors.push(`pageerror: ${err.message}`));
@@ -62,8 +72,7 @@ test.describe('landing page', () => {
     await expect(page.getByTestId('cta-simulate')).toBeVisible();
     await expectNoOverlapWithViewport(page, '[data-testid="cta-simulate"]');
     // Hero canvas must be actively painting the demo simulation.
-    await page.waitForTimeout(1500);
-    expect(await canvasColorCount(page, 'hero-sim')).toBeGreaterThan(20);
+    await expectCanvasPainted(page, 'hero-sim', 20);
     await page.screenshot({ path: shotPath(page, '01-landing'), fullPage: true });
     expect(errors).toEqual([]);
   });
@@ -76,8 +85,7 @@ test.describe('arena select', () => {
     for (const id of ['first-drive', 'ramp-lab', 'gap-run', 'balance-bridge', 'wind-tunnel', 'neon-gauntlet']) {
       await expect(page.getByTestId(`arena-card-${id}`)).toBeVisible();
     }
-    await page.waitForTimeout(600);
-    expect(await canvasColorCount(page, 'arena-preview')).toBeGreaterThan(3);
+    await expectCanvasPainted(page, 'arena-preview', 3);
     await page.screenshot({ path: shotPath(page, '02-arenas'), fullPage: true });
     expect(errors).toEqual([]);
   });
@@ -90,8 +98,7 @@ test.describe('robot builder', () => {
     await expect(page.getByTestId('builder-canvas')).toBeVisible();
     await expect(page.getByTestId('palette-wheel')).toBeVisible();
     await expect(page.getByTestId('robot-name')).toBeVisible();
-    await page.waitForTimeout(800);
-    expect(await canvasColorCount(page, 'builder-canvas')).toBeGreaterThan(10);
+    await expectCanvasPainted(page, 'builder-canvas', 10);
 
     // Interactive check: arm a wheel and mount it on the canvas.
     const before = await page.getByTestId('palette-wheel').locator('.mono-value').textContent();
@@ -119,8 +126,7 @@ test.describe('simulation', () => {
     await expect(page.getByTestId('sim-canvas')).toBeVisible();
     await expect(page.getByTestId('play-pause')).toBeVisible();
     await expectNoOverlapWithViewport(page, '[data-testid="play-pause"]');
-    await page.waitForTimeout(700);
-    expect(await canvasColorCount(page, 'sim-canvas')).toBeGreaterThan(20);
+    await expectCanvasPainted(page, 'sim-canvas', 20);
 
     // Launch and verify simulated time advances.
     await page.getByTestId('play-pause').click();
@@ -144,8 +150,7 @@ test.describe('simulation', () => {
     await page.getByTestId('cinematic-toggle').click();
     await expect(page.locator('nav.app-nav')).toHaveCSS('opacity', '0', { timeout: 5000 });
     await expect(page.getByTestId('arena-select')).toHaveCount(0);
-    await page.waitForTimeout(900);
-    expect(await canvasColorCount(page, 'sim-canvas')).toBeGreaterThan(20);
+    await expectCanvasPainted(page, 'sim-canvas', 20);
     await page.screenshot({ path: shotPath(page, '05-cinematic') });
     await page.getByTestId('cinematic-toggle').click();
     await expect(page.getByTestId('arena-select')).toBeVisible();
@@ -170,8 +175,7 @@ test.describe('simulation', () => {
     await page.waitForURL(/\/replays\?run=/);
     await expect(page.getByTestId('replay-canvas')).toBeVisible();
     await expect(page.getByTestId('replay-controls')).toBeVisible();
-    await page.waitForTimeout(1200);
-    expect(await canvasColorCount(page, 'replay-canvas')).toBeGreaterThan(20);
+    await expectCanvasPainted(page, 'replay-canvas', 20);
     await page.getByTestId('replay-scrub').fill('0.5');
     await expect(page.getByTestId('replay-play')).toContainText(/Play/i);
     await page.screenshot({ path: shotPath(page, '07-replay') });
@@ -184,8 +188,7 @@ test.describe('garage', () => {
     const errors = collectErrors(page);
     await page.goto('/robots');
     await expect(page.getByTestId('preset-card-preset-volt-roller')).toBeVisible();
-    await page.waitForTimeout(800);
-    expect(await canvasColorCount(page, 'robot-preview')).toBeGreaterThan(5);
+    await expectCanvasPainted(page, 'robot-preview', 5);
     await page.screenshot({ path: shotPath(page, '08-garage'), fullPage: true });
     expect(errors).toEqual([]);
   });

@@ -125,7 +125,8 @@ export const SimulationStage = forwardRef<
     let last = performance.now();
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
-      const dt = Math.min(0.1, (now - last) / 1000);
+      // Clamp dt ≥ 0: the first rAF timestamp can precede performance.now().
+      const dt = Math.max(0, Math.min(0.1, (now - last) / 1000));
       last = now;
 
       const canvas = canvasRef.current;

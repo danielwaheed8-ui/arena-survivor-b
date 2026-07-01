@@ -55,10 +55,12 @@ export class NeonRenderer {
   ): void {
     const theme = view.arena?.theme ?? DEFAULT_THEME;
 
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    // Preserve the caller's base (device-pixel-ratio) transform — all drawing
+    // below uses CSS-pixel coordinates composed on top of it.
+    const base = ctx.getTransform();
     this.drawBackground(ctx, theme, camera, viewW, viewH, view.t);
 
-    camera.applyTo(ctx, viewW, viewH);
+    camera.applyTo(ctx, viewW, viewH, base);
 
     if (view.arena) {
       this.drawZones(ctx, view.arena, view.t);
@@ -74,7 +76,7 @@ export class NeonRenderer {
       this.drawDecorations(ctx, view);
     }
 
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.setTransform(base);
     if (view.cinematic) this.drawVignette(ctx, viewW, viewH);
   }
 

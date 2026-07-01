@@ -40,13 +40,13 @@ export function ReplayViewer({ replay, className = '' }: { replay: ReplayData; c
     if (!ctx || replay.frames.length === 0) return;
 
     if (playing) {
-      playheadRef.current = Math.min(duration, playheadRef.current + dt * speed);
+      playheadRef.current = Math.max(0, Math.min(duration, playheadRef.current + dt * speed));
       if (playheadRef.current >= duration) setPlaying(false);
       setScrub(playheadRef.current);
     }
 
     const ft = playheadRef.current * replay.sampleHz;
-    const i0 = Math.min(replay.frames.length - 1, Math.floor(ft));
+    const i0 = Math.max(0, Math.min(replay.frames.length - 1, Math.floor(ft)));
     const i1 = Math.min(replay.frames.length - 1, i0 + 1);
     const frac = ft - i0;
     const a = decodeFrame(replay.frames[i0], replay.bodies.length);
