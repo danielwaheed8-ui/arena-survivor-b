@@ -8,7 +8,11 @@ leaderboard and a cinematic camera mode.
 > Neon Bot Trials is a fictional game/simulation. All robots are imaginary and
 > nothing here describes real-world hardware.
 
-![Landing](qa/artifacts/01-landing-desktop.png)
+![Landing](docs/screenshots/01-landing-desktop.png)
+
+| Simulation | Builder | Cinematic |
+| --- | --- | --- |
+| ![Simulate](docs/screenshots/04-simulate-desktop.png) | ![Builder](docs/screenshots/03-builder-desktop.png) | ![Cinematic](docs/screenshots/05-cinematic-desktop.png) |
 
 ## Tech stack
 

@@ -1,5 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "version": 2,
-  "builds": [{ "src": "neon-bot-trials/package.json", "use": "@vercel/next" }]
+  "framework": null,
+  "installCommand": "cd neon-bot-trials && npm ci",
+  "buildCommand": "cd neon-bot-trials && NEXT_OUTPUT=export npm run build",
+  "outputDirectory": "neon-bot-trials/out"
 }
