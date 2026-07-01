@@ -1,3 +1,16 @@
 logs/
 node_modules/
 npm-debug.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Temple Run runtime save/settings files
+temple_run_save.json
+temple_run_settings.json
+
+# pygbag / WASM build staging + output
+webbuild/
+build/
