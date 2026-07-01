@@ -367,8 +367,8 @@ function SimulatePageInner() {
                 ['Time bonus', results.score.timeBonus],
                 ['Stability bonus', results.score.stabilityBonus],
                 ['Energy efficiency', results.score.energyBonus],
-                ['Flip penalty', -results.score.flipPenalty],
-                ['Impact penalty', -results.score.crashPenalty],
+                ['Flip penalty', results.score.flipPenalty === 0 ? 0 : -results.score.flipPenalty],
+                ['Impact penalty', results.score.crashPenalty === 0 ? 0 : -results.score.crashPenalty],
               ].map(([label, v]) => (
                 <li key={label as string} className="flex justify-between">
                   <span className="text-slate-400">{label}</span>
