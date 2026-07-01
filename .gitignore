@@ -14,4 +14,3 @@ temple_run_settings.json
 # pygbag / WASM build staging + output
 webbuild/
 build/
-*.apk
