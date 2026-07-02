@@ -315,9 +315,9 @@
                 <radialGradient id="glowG" cx="46%" cy="42%" r="60%">
                   <stop offset="0%" stop-color="#FFEFC9"/><stop offset="60%" stop-color="#FFE4BE" stop-opacity=".55"/><stop offset="100%" stop-color="#FFE4BE" stop-opacity="0"/>
                 </radialGradient>
-                <radialGradient id="mangoG" cx="36%" cy="30%" r="82%">
-                  <stop offset="0%" stop-color="#FFE9A0"/><stop offset="34%" stop-color="#FFC24E"/><stop offset="70%" stop-color="#F87A1E"/><stop offset="100%" stop-color="#E24C09"/>
-                </radialGradient>
+                <linearGradient id="mangoG" x1="0.24" y1="0.02" x2="0.74" y2="1">
+                  <stop offset="0%" stop-color="#FFE788"/><stop offset="30%" stop-color="#FFB93F"/><stop offset="64%" stop-color="#F4802A"/><stop offset="100%" stop-color="#E24C12"/>
+                </linearGradient>
                 <linearGradient id="leafG2" x1="0" y1="0" x2="1" y2="1">
                   <stop offset="0%" stop-color="#8FCB96"/><stop offset="100%" stop-color="#3E8A50"/>
                 </linearGradient>
@@ -329,34 +329,39 @@
               <!-- panel + warm glow -->
               <rect x="18" y="30" width="504" height="504" rx="78" fill="url(#panelG)"/>
               <g clip-path="url(#panelClip)">
-                <circle cx="252" cy="262" r="230" fill="url(#glowG)"/>
+                <circle cx="274" cy="300" r="228" fill="url(#glowG)"/>
                 <!-- depth blobs -->
                 <path d="M96 118c46-26 92 4 96 44 5 44-34 74-78 62-40-11-58-84-18-106z" fill="#E9F4EA" opacity=".8"/>
-                <path d="M470 380c30 26 20 78-18 92-40 15-78-16-70-58 7-38 60-58 88-34z" fill="#FFE0C6" opacity=".7"/>
+                <path d="M470 384c30 26 20 78-18 92-40 15-78-16-70-58 7-38 60-58 88-34z" fill="#FFE0C6" opacity=".7"/>
 
-                <!-- orbit ring around the mango -->
+                <!-- orbit ring (concentric with the mango) -->
                 <g class="illo-orbit">
-                  <ellipse cx="268" cy="300" rx="188" ry="182" fill="none" stroke="#F2A24A" stroke-width="2" stroke-dasharray="2 12" stroke-linecap="round" opacity=".55"/>
-                  <circle cx="268" cy="118" r="7" fill="#3FA9C9"/>
-                  <circle cx="456" cy="300" r="5" fill="#6BC07C"/>
+                  <circle cx="278" cy="306" r="190" fill="none" stroke="#F2A24A" stroke-width="2" stroke-dasharray="2 12" stroke-linecap="round" opacity=".5"/>
+                  <circle cx="278" cy="116" r="7" fill="#3FA9C9"/>
+                  <circle cx="468" cy="306" r="5" fill="#6BC07C"/>
+                  <circle cx="278" cy="496" r="4" fill="#F2A24A"/>
                 </g>
 
                 <!-- grounding shadow -->
-                <ellipse cx="272" cy="452" rx="120" ry="26" fill="#C56A28" opacity=".18" filter="url(#soft2)"/>
+                <ellipse cx="284" cy="456" rx="116" ry="24" fill="#C56A28" opacity=".18" filter="url(#soft2)"/>
 
-                <!-- MANGO -->
+                <!-- MANGO (elongated, tilted — reads as a mango, not an orange) -->
                 <g>
-                  <path d="M268 172c76-4 140 42 148 120 7 68-38 132-116 144-74 11-138-28-148-100-9-62 24-136 92-156 8-3 16-7 24-8z" fill="url(#mangoG)"/>
-                  <!-- specular gloss -->
-                  <ellipse cx="222" cy="244" rx="40" ry="60" transform="rotate(-26 222 244)" fill="#FFF7E4" opacity=".42" filter="url(#soft2)"/>
-                  <ellipse cx="210" cy="228" rx="12" ry="20" transform="rotate(-26 210 228)" fill="#FFFFFF" opacity=".55"/>
-                  <!-- soft bottom shading -->
-                  <path d="M300 428c56-16 88-64 84-118 18 52-8 116-70 132-58 15-118-18-134-72 26 46 76 70 120 58z" fill="#C6420A" opacity=".22"/>
+                  <path d="M300 172 C360 175 405 217 415 286 C425 356 402 420 335 447 C312 456 286 457 262 449 C201 429 160 366 169 300 C177 240 210 194 264 178 C276 174 288 172 300 172 Z" fill="url(#mangoG)"/>
+                  <!-- yellow-green shoulder near the stem -->
+                  <path d="M300 174 C335 178 366 197 387 231 C357 216 329 210 301 212 C300 199 300 187 300 174 Z" fill="#D7E389" opacity=".55"/>
+                  <!-- red-blush cheek (sun shoulder) -->
+                  <ellipse cx="356" cy="262" rx="50" ry="72" transform="rotate(26 356 262)" fill="#E23A18" opacity=".24"/>
+                  <!-- deep bottom shading -->
+                  <path d="M330 442 C390 418 416 360 406 300 C424 356 402 424 334 448 C300 458 258 452 232 430 C266 448 302 450 330 442 Z" fill="#C6420A" opacity=".2"/>
+                  <!-- specular gloss (upper-left) -->
+                  <ellipse cx="228" cy="256" rx="36" ry="58" transform="rotate(-28 228 256)" fill="#FFF7E0" opacity=".4" filter="url(#soft2)"/>
+                  <ellipse cx="216" cy="238" rx="11" ry="19" transform="rotate(-28 216 238)" fill="#FFFFFF" opacity=".5"/>
                   <!-- stem -->
-                  <path d="M300 176c4-9 4-18 2-27" fill="none" stroke="#8A5A2C" stroke-width="7" stroke-linecap="round"/>
+                  <path d="M300 172 c3-10 2-19-2-28" fill="none" stroke="#7C5127" stroke-width="7" stroke-linecap="round"/>
                   <!-- leaf -->
-                  <path d="M303 152c8-24 30-40 58-42-2 30-20 52-46 58-6 1-10 0-12-1z" fill="url(#leafG2)"/>
-                  <path d="M309 152c14-9 28-16 44-19" fill="none" stroke="#2E7A44" stroke-width="2.4" stroke-linecap="round" opacity=".7"/>
+                  <path d="M300 150 C314 118 348 100 386 104 C378 140 348 162 314 160 C307 159 302 156 300 150 Z" fill="url(#leafG2)"/>
+                  <path d="M307 150 C329 137 354 129 378 127" fill="none" stroke="#2E7A44" stroke-width="2.4" stroke-linecap="round" opacity=".6"/>
                 </g>
 
                 <!-- care badge: heart -->
@@ -578,24 +583,12 @@
                 <circle cx="160" cy="160" r="92" fill="url(#medG)"/>
                 <circle cx="160" cy="160" r="92" fill="none" stroke="#FFFFFF" stroke-width="3" opacity=".45"/>
 
-                <!-- cameo silhouette -->
-                <g clip-path="url(#medClip)">
-                  <path d="M100 252c0-36 27-60 60-60s60 24 60 60z" fill="#FFF4E4"/>
-                  <circle cx="160" cy="146" r="37" fill="#FFF4E4"/>
-                  <!-- collar hint + stethoscope over the shoulders -->
-                  <path d="M138 232l22 15 22-15" fill="none" stroke="#F0DCC2" stroke-width="4" stroke-linecap="round"/>
-                  <path d="M146 236c-7 16-3 34 8 46" fill="none" stroke="#EE5F14" stroke-width="4.5" stroke-linecap="round" opacity=".85"/>
-                  <path d="M174 236c8 14 4 32-8 44" fill="none" stroke="#EE5F14" stroke-width="4.5" stroke-linecap="round" opacity=".85"/>
-                  <circle cx="163" cy="286" r="7.5" fill="#EE5F14"/>
-                </g>
-
-                <!-- little mango accent -->
-                <g transform="translate(236 232)">
-                  <circle cx="0" cy="0" r="15" fill="#FF9E2C"/>
-                  <path d="M-3 -12c1-4 5-6 9-6-.4 4-3 7-7 8" fill="none" stroke="#3E8A50" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-                  <ellipse cx="-5" cy="-4" rx="3.5" ry="5" fill="#fff" opacity=".5"/>
-                </g>
-                <path d="M74 250l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#F2A24A"/>
+                <!-- monogram -->
+                <text x="161" y="190" text-anchor="middle" font-family="'Fraunces', Georgia, serif" font-weight="600" font-size="84" letter-spacing="-1" fill="#FFF4E4">RA</text>
+                <!-- caring heart accent -->
+                <path d="M161 210c-5-7-16-5-16 3.4 0 6.6 10 11.6 16 16.6 6-5 16-10 16-16.6 0-8.4-11-10.4-16-3.4z" fill="#FFF4E4" opacity=".78"/>
+                <!-- sparkle -->
+                <path d="M72 250l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#F2A24A"/>
               </svg>
             </div>
             <div class="doctor-card__meta">
@@ -816,6 +809,12 @@
             There&rsquo;s no cost and no obligation &mdash; just a warm conversation about your child&rsquo;s care.
           </p>
         </div>
+
+        <ul class="expect reveal" data-reveal aria-label="What to expect at your meet and greet">
+          <li><svg class="ic" aria-hidden="true"><use href="#i-check"></use></svg> A relaxed sit&#8209;down with Dr.&nbsp;Azam &mdash; in person or by phone</li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-check"></use></svg> A tour of our Southpoint office</li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-check"></use></svg> Ask anything &mdash; no cost, no pressure</li>
+        </ul>
 
         <div class="contact__grid">
           <!-- Info + hours -->
