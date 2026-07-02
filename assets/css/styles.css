@@ -98,6 +98,7 @@ body {
 }
 
 img, svg { display: block; max-width: 100%; }
+[hidden] { display: none !important; }
 a { color: inherit; text-decoration: none; }
 button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; }
 ul { list-style: none; padding: 0; }
@@ -139,7 +140,7 @@ strong { font-weight: 700; }
 
 .section-head { max-width: 720px; margin: 0 auto clamp(2.25rem, 5vw, 3.5rem); text-align: center; }
 .section-head > * + * { margin-top: 1.1rem; }
-.section-title { font-size: clamp(1.85rem, 1.2rem + 2.7vw, 3rem); }
+.section-title { font-size: clamp(1.85rem, 1.2rem + 2.7vw, 3rem); text-wrap: balance; }
 .section-title--left { text-align: left; }
 .section-sub { color: var(--ink-soft); font-size: clamp(1.02rem, .98rem + .3vw, 1.18rem); }
 
@@ -327,6 +328,12 @@ strong { font-weight: 700; }
 /* ---------- Card grids ---------- */
 .card-grid { display: grid; gap: clamp(1rem, 2.5vw, 1.6rem); }
 .card-grid--3 { grid-template-columns: repeat(3, 1fr); }
+
+/* Balance card titles + reserve 2 lines so paragraph start-lines align across a row */
+.feature-card h3, .service-card h3, .why-card h3, .resource-card h3 { text-wrap: balance; }
+@media (min-width: 561px) {
+  .feature-card h3, .service-card h3, .why-card h3, .resource-card h3 { min-height: 2.4em; }
+}
 
 /* ---------- Feature cards (care) ---------- */
 .care { background: linear-gradient(180deg, #fff 0%, var(--cream) 100%); }
