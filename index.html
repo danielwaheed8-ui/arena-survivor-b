@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <script>document.documentElement.className += " js";</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#FF7A1A" />
   <title>Mango Pediatrics · Concierge Pediatric Care in Jacksonville, FL — Dr. Rubina Azam, MD</title>
@@ -24,8 +25,8 @@
   <link rel="manifest" href="site.webmanifest" />
 
   <!-- Fonts: self-hosted, preloaded for fast first paint -->
-  <link rel="preload" href="assets/fonts/fraunces-796716.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="preload" href="assets/fonts/jakarta-9f6257.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="assets/fonts/fraunces-39ce20.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="assets/fonts/jakarta-fdb05b.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="assets/fonts/fonts.css" />
   <link rel="stylesheet" href="assets/css/styles.css" />
 
@@ -239,7 +240,6 @@
           <li><a href="#services">Services</a></li>
           <li><a href="#doctor">Meet Dr. Azam</a></li>
           <li><a href="#why">Why Mango</a></li>
-          <li><a href="#testimonials">Parents</a></li>
           <li><a href="#resources">Resources</a></li>
           <li><a href="#contact">Contact</a></li>
         </ul>
@@ -306,85 +306,76 @@
 
         <div class="hero__art reveal" data-reveal aria-hidden="true">
           <div class="hero-scene">
-            <!-- Bespoke pediatric illustration: pediatrician and child -->
-            <svg class="hero-illo" viewBox="0 0 540 560" role="img" aria-label="Illustration of a pediatrician caring for a happy child">
+            <!-- Modern studio composition: the Mango Pediatrics brand mango + care motifs -->
+            <svg class="hero-illo" viewBox="0 0 540 560" role="img" aria-label="A ripe mango with a fresh leaf, encircled by gentle heart and care motifs — the Mango Pediatrics brand.">
               <defs>
-                <linearGradient id="cardGrad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stop-color="#FFFDF8"/><stop offset="100%" stop-color="#FFF3E0"/>
+                <linearGradient id="panelG" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#FFFDF8"/><stop offset="100%" stop-color="#FFEFDA"/>
                 </linearGradient>
-                <linearGradient id="mangoBig" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stop-color="#FFD36B"/><stop offset="50%" stop-color="#FF9E2C"/><stop offset="100%" stop-color="#F2631B"/>
+                <radialGradient id="glowG" cx="46%" cy="42%" r="60%">
+                  <stop offset="0%" stop-color="#FFEFC9"/><stop offset="60%" stop-color="#FFE4BE" stop-opacity=".55"/><stop offset="100%" stop-color="#FFE4BE" stop-opacity="0"/>
+                </radialGradient>
+                <radialGradient id="mangoG" cx="36%" cy="30%" r="82%">
+                  <stop offset="0%" stop-color="#FFE9A0"/><stop offset="34%" stop-color="#FFC24E"/><stop offset="70%" stop-color="#F87A1E"/><stop offset="100%" stop-color="#E24C09"/>
+                </radialGradient>
+                <linearGradient id="leafG2" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#8FCB96"/><stop offset="100%" stop-color="#3E8A50"/>
                 </linearGradient>
-                <linearGradient id="coat" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#F3F6FA"/>
-                </linearGradient>
-                <linearGradient id="scrub" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#54B2C9"/><stop offset="100%" stop-color="#2E8DA8"/>
-                </linearGradient>
-                <linearGradient id="childShirt" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#FF8A5B"/><stop offset="100%" stop-color="#F26A3B"/>
-                </linearGradient>
+                <filter id="soft2" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="9"/></filter>
+                <filter id="heroGrain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" result="n"/><feColorMatrix in="n" type="saturate" values="0"/></filter>
+                <clipPath id="panelClip"><rect x="18" y="30" width="504" height="504" rx="78"/></clipPath>
               </defs>
 
-              <!-- soft backdrop -->
-              <rect x="20" y="34" width="500" height="500" rx="72" fill="url(#cardGrad)"/>
-              <circle cx="270" cy="284" r="196" fill="#FFE7C2" opacity=".55"/>
-              <circle cx="270" cy="284" r="150" fill="#FFF6E6"/>
+              <!-- panel + warm glow -->
+              <rect x="18" y="30" width="504" height="504" rx="78" fill="url(#panelG)"/>
+              <g clip-path="url(#panelClip)">
+                <circle cx="252" cy="262" r="230" fill="url(#glowG)"/>
+                <!-- depth blobs -->
+                <path d="M96 118c46-26 92 4 96 44 5 44-34 74-78 62-40-11-58-84-18-106z" fill="#E9F4EA" opacity=".8"/>
+                <path d="M470 380c30 26 20 78-18 92-40 15-78-16-70-58 7-38 60-58 88-34z" fill="#FFE0C6" opacity=".7"/>
 
-              <!-- decorative leaves in corner -->
-              <g opacity=".9">
-                <path d="M92 96c-6 26 8 46 34 52-4-27-16-43-34-52z" fill="#7FC28C"/>
-                <path d="M92 96c14 12 24 27 30 44" fill="none" stroke="#4E9B5E" stroke-width="2.4" stroke-linecap="round"/>
-              </g>
+                <!-- orbit ring around the mango -->
+                <g class="illo-orbit">
+                  <ellipse cx="268" cy="300" rx="188" ry="182" fill="none" stroke="#F2A24A" stroke-width="2" stroke-dasharray="2 12" stroke-linecap="round" opacity=".55"/>
+                  <circle cx="268" cy="118" r="7" fill="#3FA9C9"/>
+                  <circle cx="456" cy="300" r="5" fill="#6BC07C"/>
+                </g>
 
-              <!-- pediatrician figure -->
-              <g>
-                <!-- coat body -->
-                <path d="M150 470c0-70 22-118 66-118 8 0 15 1 22 3 7-2 14-3 22-3 44 0 66 48 66 118z" fill="url(#coat)"/>
-                <!-- scrub V under coat -->
-                <path d="M238 355c-8 22-8 46 0 74 8-28 8-52 0-74z" fill="url(#scrub)"/>
-                <!-- neck -->
-                <rect x="224" y="322" width="28" height="34" rx="12" fill="#F2C09A"/>
-                <!-- head -->
-                <circle cx="238" cy="300" r="40" fill="#F6C9A4"/>
-                <!-- hair -->
-                <path d="M198 300c-2-30 18-52 40-52s42 20 40 52c-6-6-10-16-10-24-10 12-40 16-58 6-2 8-6 14-12 18z" fill="#3B2B2B"/>
-                <path d="M198 300c0 18 4 30 8 40-14-6-16-32-8-40z" fill="#3B2B2B"/>
-                <path d="M278 300c0 18-4 30-8 40 14-6 16-32 8-40z" fill="#3B2B2B"/>
-                <!-- face -->
-                <circle cx="226" cy="300" r="3.1" fill="#4a3b32"/>
-                <circle cx="252" cy="300" r="3.1" fill="#4a3b32"/>
-                <path d="M230 312c4 4 10 4 14 0" fill="none" stroke="#c9784f" stroke-width="2.6" stroke-linecap="round"/>
-                <circle cx="219" cy="308" r="5" fill="#FF9E7A" opacity=".45"/>
-                <circle cx="259" cy="308" r="5" fill="#FF9E7A" opacity=".45"/>
-                <!-- stethoscope -->
-                <path d="M226 356c-6 26-2 54 6 74" fill="none" stroke="#2E8DA8" stroke-width="5" stroke-linecap="round"/>
-                <path d="M250 356c8 20 4 44-8 60" fill="none" stroke="#2E8DA8" stroke-width="5" stroke-linecap="round"/>
-                <circle cx="240" cy="424" r="10" fill="#2E8DA8"/>
-                <circle cx="240" cy="424" r="4.5" fill="#BFE6F0"/>
-                <!-- arm around child -->
-                <path d="M296 372c26 6 44 26 46 54-16 6-30 4-40-6" fill="url(#coat)"/>
-              </g>
+                <!-- grounding shadow -->
+                <ellipse cx="272" cy="452" rx="120" ry="26" fill="#C56A28" opacity=".18" filter="url(#soft2)"/>
 
-              <!-- child figure (seated, happy) -->
-              <g>
-                <path d="M300 476c0-38 18-64 46-64s46 26 46 64z" fill="url(#childShirt)"/>
-                <rect x="336" y="392" width="20" height="24" rx="9" fill="#EBB68C"/>
-                <circle cx="346" cy="374" r="30" fill="#F4C29B"/>
-                <path d="M316 372c0-22 14-38 30-38s30 16 30 38c-5-5-9-12-9-18-9 10-30 12-42 4-1 6-4 11-9 14z" fill="#5a3d2b"/>
-                <circle cx="337" cy="374" r="2.7" fill="#4a3b32"/>
-                <circle cx="357" cy="374" r="2.7" fill="#4a3b32"/>
-                <path d="M339 384c4 4 10 4 14 0" fill="none" stroke="#c9784f" stroke-width="2.4" stroke-linecap="round"/>
-                <circle cx="330" cy="381" r="4.3" fill="#FF9E7A" opacity=".5"/>
-                <circle cx="363" cy="381" r="4.3" fill="#FF9E7A" opacity=".5"/>
-                <!-- child holding a little mango -->
-                <circle cx="322" cy="452" r="15" fill="url(#mangoBig)"/>
-                <path d="M320 439c1-4 5-6 9-6-.4 4-3 7-7 8" fill="none" stroke="#4E9B5E" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-              </g>
+                <!-- MANGO -->
+                <g>
+                  <path d="M268 172c76-4 140 42 148 120 7 68-38 132-116 144-74 11-138-28-148-100-9-62 24-136 92-156 8-3 16-7 24-8z" fill="url(#mangoG)"/>
+                  <!-- specular gloss -->
+                  <ellipse cx="222" cy="244" rx="40" ry="60" transform="rotate(-26 222 244)" fill="#FFF7E4" opacity=".42" filter="url(#soft2)"/>
+                  <ellipse cx="210" cy="228" rx="12" ry="20" transform="rotate(-26 210 228)" fill="#FFFFFF" opacity=".55"/>
+                  <!-- soft bottom shading -->
+                  <path d="M300 428c56-16 88-64 84-118 18 52-8 116-70 132-58 15-118-18-134-72 26 46 76 70 120 58z" fill="#C6420A" opacity=".22"/>
+                  <!-- stem -->
+                  <path d="M300 176c4-9 4-18 2-27" fill="none" stroke="#8A5A2C" stroke-width="7" stroke-linecap="round"/>
+                  <!-- leaf -->
+                  <path d="M303 152c8-24 30-40 58-42-2 30-20 52-46 58-6 1-10 0-12-1z" fill="url(#leafG2)"/>
+                  <path d="M309 152c14-9 28-16 44-19" fill="none" stroke="#2E7A44" stroke-width="2.4" stroke-linecap="round" opacity=".7"/>
+                </g>
 
-              <!-- floating hearts -->
-              <g class="illo-heart" opacity=".9">
-                <path d="M410 150c-2-8 4-14 11-11 3 1 5 4 5 7 0-3 2-6 5-7 7-3 13 3 11 11-2 9-16 16-16 16s-14-7-16-16z" fill="#FF7A6E"/>
+                <!-- care badge: heart -->
+                <g class="illo-heart">
+                  <circle cx="150" cy="196" r="26" fill="#fff"/>
+                  <path d="M150 208s-13-8-13-17c0-5 4-8 8-7 2 .3 4 2 5 4 1-2 3-3.7 5-4 4-1 8 2 8 7 0 9-13 17-13 17z" fill="#F26A5E"/>
+                </g>
+                <!-- care badge: plus -->
+                <g class="illo-plus">
+                  <circle cx="404" cy="176" r="22" fill="#fff"/>
+                  <path d="M404 166v20M394 176h20" stroke="#2E8DA8" stroke-width="5" stroke-linecap="round"/>
+                </g>
+
+                <!-- sparkles -->
+                <path d="M120 400l2.6 6.4L129 409l-6.4 2.6L120 418l-2.6-6.4L111 409l6.4-2.6z" fill="#F2A24A"/>
+                <path d="M430 430l2.2 5.4L438 438l-5.4 2.2L430 446l-2.2-5.4L422 438l5.4-2.2z" fill="#FFC24E"/>
+
+                <!-- grain overlay -->
+                <rect x="18" y="30" width="504" height="504" filter="url(#heroGrain)" opacity=".1" style="mix-blend-mode:overlay"/>
               </g>
             </svg>
 
@@ -561,44 +552,50 @@
       <div class="wrap doctor__inner">
         <div class="doctor__media reveal" data-reveal>
           <div class="doctor-card">
-            <div class="doctor-card__portrait" role="img" aria-label="Portrait illustration of Dr. Rubina Azam, MD">
+            <div class="doctor-card__portrait" role="img" aria-label="Stylized cameo portrait of Dr. Rubina Azam, MD, board-certified pediatrician.">
               <svg viewBox="0 0 320 360" class="doctor-illo">
                 <defs>
                   <linearGradient id="docBg" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stop-color="#FFE9C4"/><stop offset="100%" stop-color="#FFD59B"/>
+                    <stop offset="0%" stop-color="#FFF3E0"/><stop offset="100%" stop-color="#FFE1BE"/>
                   </linearGradient>
-                  <linearGradient id="docCoat" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#EEF3F8"/>
-                  </linearGradient>
+                  <radialGradient id="medG" cx="36%" cy="30%" r="78%">
+                    <stop offset="0%" stop-color="#FFE1A0"/><stop offset="45%" stop-color="#FF9E2C"/><stop offset="100%" stop-color="#EE5F14"/>
+                  </radialGradient>
+                  <clipPath id="medClip"><circle cx="160" cy="160" r="92"/></clipPath>
+                  <path id="credPath" d="M160 160 m -119 0 a 119 119 0 1 1 238 0 a 119 119 0 1 1 -238 0" fill="none"/>
                 </defs>
                 <rect x="0" y="0" width="320" height="360" rx="34" fill="url(#docBg)"/>
-                <circle cx="160" cy="150" r="104" fill="#FFF4E0" opacity=".7"/>
-                <!-- shoulders / coat -->
-                <path d="M60 360c0-64 40-104 100-104s100 40 100 104z" fill="url(#docCoat)"/>
-                <path d="M150 262c-6 20-6 42 0 66 6-24 6-46 0-66z" fill="#54B2C9"/>
-                <path d="M139 258l21 14 21-14-4 22h-34z" fill="#EFF4F8"/>
-                <!-- neck -->
-                <rect x="145" y="222" width="30" height="40" rx="13" fill="#EAB78D"/>
-                <!-- head -->
-                <circle cx="160" cy="188" r="52" fill="#F4C299"/>
-                <!-- hair -->
-                <path d="M108 188c-4-40 24-70 52-70s56 30 52 70c-6-10-12-24-12-34-14 16-52 20-74 8-2 12-10 20-18 26z" fill="#33241f"/>
-                <path d="M108 190c-2 30 6 52 14 66-22-10-28-52-14-66z" fill="#33241f"/>
-                <path d="M212 190c2 30-6 52-14 66 22-10 28-52 14-66z" fill="#33241f"/>
-                <!-- face -->
-                <circle cx="144" cy="188" r="3.8" fill="#4a3b32"/>
-                <circle cx="176" cy="188" r="3.8" fill="#4a3b32"/>
-                <path d="M150 203c6 5 14 5 20 0" fill="none" stroke="#c9784f" stroke-width="3" stroke-linecap="round"/>
-                <circle cx="134" cy="198" r="6.5" fill="#FF9E7A" opacity=".45"/>
-                <circle cx="186" cy="198" r="6.5" fill="#FF9E7A" opacity=".45"/>
-                <!-- stethoscope -->
-                <path d="M146 262c-8 26-4 54 6 74" fill="none" stroke="#2E8DA8" stroke-width="6" stroke-linecap="round"/>
-                <path d="M174 262c10 22 4 50-10 66" fill="none" stroke="#2E8DA8" stroke-width="6" stroke-linecap="round"/>
-                <circle cx="160" cy="338" r="12" fill="#2E8DA8"/>
-                <circle cx="160" cy="338" r="5" fill="#BFE6F0"/>
-                <!-- little mango pin on coat -->
-                <circle cx="206" cy="300" r="12" fill="#FF9E2C"/>
-                <path d="M203 289c1-4 5-6 9-5-.4 4-3 6-7 7" fill="none" stroke="#4E9B5E" stroke-width="2.2" stroke-linecap="round"/>
+                <circle cx="160" cy="152" r="126" fill="#FFF6E6" opacity=".55"/>
+
+                <!-- rotating credential ring -->
+                <g class="cred-ring">
+                  <text font-family="'Plus Jakarta Sans', sans-serif" font-size="10.4" font-weight="700" letter-spacing="2.3" fill="#A6390A" opacity=".72">
+                    <textPath href="#credPath" startOffset="0">· BOARD&#8209;CERTIFIED PEDIATRICIAN · INTEGRATIVE &amp; HOLISTIC MEDICINE </textPath>
+                  </text>
+                </g>
+
+                <!-- medallion -->
+                <circle cx="160" cy="160" r="92" fill="url(#medG)"/>
+                <circle cx="160" cy="160" r="92" fill="none" stroke="#FFFFFF" stroke-width="3" opacity=".45"/>
+
+                <!-- cameo silhouette -->
+                <g clip-path="url(#medClip)">
+                  <path d="M100 252c0-36 27-60 60-60s60 24 60 60z" fill="#FFF4E4"/>
+                  <circle cx="160" cy="146" r="37" fill="#FFF4E4"/>
+                  <!-- collar hint + stethoscope over the shoulders -->
+                  <path d="M138 232l22 15 22-15" fill="none" stroke="#F0DCC2" stroke-width="4" stroke-linecap="round"/>
+                  <path d="M146 236c-7 16-3 34 8 46" fill="none" stroke="#EE5F14" stroke-width="4.5" stroke-linecap="round" opacity=".85"/>
+                  <path d="M174 236c8 14 4 32-8 44" fill="none" stroke="#EE5F14" stroke-width="4.5" stroke-linecap="round" opacity=".85"/>
+                  <circle cx="163" cy="286" r="7.5" fill="#EE5F14"/>
+                </g>
+
+                <!-- little mango accent -->
+                <g transform="translate(236 232)">
+                  <circle cx="0" cy="0" r="15" fill="#FF9E2C"/>
+                  <path d="M-3 -12c1-4 5-6 9-6-.4 4-3 7-7 8" fill="none" stroke="#3E8A50" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  <ellipse cx="-5" cy="-4" rx="3.5" ry="5" fill="#fff" opacity=".5"/>
+                </g>
+                <path d="M74 250l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#F2A24A"/>
               </svg>
             </div>
             <div class="doctor-card__meta">
@@ -730,11 +727,12 @@
         </div>
 
         <div class="tst-meta">
-          <div class="tst-meta__card reveal" data-reveal>
+          <a class="tst-meta__card reveal" data-reveal href="https://health.usnews.com/doctors/rubina-azam-322201" target="_blank" rel="noopener">
             <span class="tst-meta__num">75+</span>
             <span class="tst-meta__label">Patient reviews across trusted physician directories</span>
-          </div>
-          <div class="tst-meta__card reveal" data-reveal>
+            <span class="tst-meta__more">View profile <svg class="ic" aria-hidden="true"><use href="#i-arrow"></use></svg></span>
+          </a>
+          <a class="tst-meta__card reveal" data-reveal href="https://health.usnews.com/doctors/rubina-azam-322201" target="_blank" rel="noopener">
             <span class="tst-meta__stars">
               <svg class="ic" aria-hidden="true"><use href="#i-star"></use></svg>
               <svg class="ic" aria-hidden="true"><use href="#i-star"></use></svg>
@@ -743,7 +741,8 @@
               <svg class="ic" aria-hidden="true"><use href="#i-star"></use></svg>
             </span>
             <span class="tst-meta__label">&ldquo;Highly recommended&rdquo; by families on US&nbsp;News physician ratings</span>
-          </div>
+            <span class="tst-meta__more">View on US&nbsp;News <svg class="ic" aria-hidden="true"><use href="#i-arrow"></use></svg></span>
+          </a>
           <div class="tst-meta__card tst-meta__card--invite reveal" data-reveal>
             <span class="tst-meta__ic"><svg class="ic" aria-hidden="true"><use href="#i-heart"></use></svg></span>
             <p>Are you a Mango family? We&rsquo;d love to share your story here.</p>
@@ -864,17 +863,30 @@
 
           <!-- Form + map -->
           <div class="contact__panel reveal" data-reveal>
-            <div class="contact-map" aria-hidden="true">
-              <svg viewBox="0 0 480 180" preserveAspectRatio="xMidYMid slice" class="contact-map__svg">
-                <rect width="480" height="180" fill="#EAF4EC"/>
-                <path d="M0 60h480M0 120h480M120 0v180M300 0v180M400 0v180" stroke="#D6E8DA" stroke-width="6"/>
-                <path d="M0 30c120 10 200 60 480 30" stroke="#CFE6F0" stroke-width="10" fill="none"/>
-                <rect x="60" y="70" width="70" height="46" rx="6" fill="#DCEFE0"/>
-                <rect x="330" y="24" width="80" height="40" rx="6" fill="#DCEFE0"/>
-                <rect x="150" y="130" width="90" height="36" rx="6" fill="#DCEFE0"/>
-                <g transform="translate(290 84)">
-                  <path d="M0 0c14-16 24-26 24-42A24 24 0 1 0-24-42C-24-26-14-16 0 0z" fill="#F2631B"/>
-                  <circle cx="0" cy="-42" r="9" fill="#fff"/>
+            <div class="contact-map">
+              <svg viewBox="0 0 480 190" preserveAspectRatio="xMidYMid slice" class="contact-map__svg" aria-hidden="true" focusable="false">
+                <rect width="480" height="190" fill="#ECF4EE"/>
+                <!-- water / river -->
+                <path d="M-10 40 C120 60 180 12 300 26 C380 36 440 20 490 34 L490 -10 L-10 -10 Z" fill="#D6EBF2"/>
+                <path d="M-10 40 C120 60 180 12 300 26 C380 36 440 20 490 34" fill="none" stroke="#BFE0EA" stroke-width="3"/>
+                <!-- park blocks -->
+                <rect x="44" y="86" width="86" height="54" rx="7" fill="#DBEFDD"/>
+                <rect x="196" y="120" width="104" height="56" rx="7" fill="#DBEFDD"/>
+                <rect x="348" y="70" width="96" height="52" rx="7" fill="#DBEFDD"/>
+                <rect x="330" y="132" width="64" height="44" rx="7" fill="#E6F2E8"/>
+                <!-- street grid -->
+                <g stroke="#FBFDFB" stroke-width="9" stroke-linecap="round">
+                  <path d="M0 76h480M0 128h480M0 170h480"/>
+                  <path d="M150 0v190M312 0v190M424 0v190"/>
+                </g>
+                <g stroke="#E3EEE5" stroke-width="2"><path d="M0 76h480M0 128h480M150 0v190M312 0v190"/></g>
+                <!-- highlighted route (Southpoint Pkwy) -->
+                <path d="M20 176 L150 176 L150 76 L312 76" fill="none" stroke="#F2A24A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
+                <!-- location pin -->
+                <g transform="translate(312 76)">
+                  <ellipse cx="0" cy="6" rx="12" ry="4" fill="#B8430B" opacity=".28"/>
+                  <path d="M0 2c15-18 25-28 25-45A25 25 0 1 0-25-43C-25-26-15-16 0 2z" fill="#F2631B"/>
+                  <circle cx="0" cy="-43" r="9" fill="#fff"/>
                 </g>
               </svg>
               <a class="contact-map__link" href="https://www.google.com/maps/search/?api=1&amp;query=6789+Southpoint+Parkway+Suite+202+Jacksonville+FL+32216" target="_blank" rel="noopener">
@@ -956,7 +968,7 @@
       </div>
 
       <nav class="site-footer__col" aria-label="Explore">
-        <h4>Explore</h4>
+        <h3>Explore</h3>
         <ul>
           <li><a href="#care">Care Model</a></li>
           <li><a href="#services">Services</a></li>
@@ -967,7 +979,7 @@
       </nav>
 
       <nav class="site-footer__col" aria-label="Services">
-        <h4>Services</h4>
+        <h3>Services</h3>
         <ul>
           <li><a href="#services">Well Checks</a></li>
           <li><a href="#services">Sick Visits</a></li>
@@ -979,7 +991,7 @@
       </nav>
 
       <nav class="site-footer__col" aria-label="Resources">
-        <h4>Resources</h4>
+        <h3>Resources</h3>
         <ul>
           <li><a href="#resources">Symptom Checker</a></li>
           <li><a href="#resources">Medicine Dosages</a></li>
@@ -990,7 +1002,7 @@
       </nav>
 
       <div class="site-footer__col site-footer__contact">
-        <h4>Contact</h4>
+        <h3>Contact</h3>
         <ul>
           <li><a href="tel:+19048531763"><svg class="ic" aria-hidden="true"><use href="#i-phone"></use></svg> 904&#8209;853&#8209;1763</a></li>
           <li><a href="https://www.google.com/maps/search/?api=1&amp;query=6789+Southpoint+Parkway+Suite+202+Jacksonville+FL+32216" target="_blank" rel="noopener"><svg class="ic" aria-hidden="true"><use href="#i-map-pin"></use></svg> <span class="site-footer__addr">6789 Southpoint Pkwy, Ste 202<br/>Jacksonville, FL 32216</span></a></li>
@@ -1010,6 +1022,12 @@
     </div>
     <p class="wrap site-footer__disclaimer">The content on this website is for general informational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment. For a medical emergency, call 911.</p>
   </footer>
+
+  <!-- Sticky mobile call-to-action -->
+  <div class="mobile-cta" id="mobile-cta">
+    <a class="btn btn--primary" href="#contact">Schedule a meet &amp; greet</a>
+    <a class="btn btn--soft mobile-cta__call" href="tel:+19048531763" aria-label="Call or text 904-853-1763"><svg class="ic" aria-hidden="true"><use href="#i-phone"></use></svg></a>
+  </div>
 
   <!-- Back to top -->
   <button class="to-top" id="to-top" aria-label="Back to top" hidden>

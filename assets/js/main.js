@@ -194,6 +194,19 @@
     });
   }
 
+  /* ---------- Sticky mobile CTA visibility ---------- */
+  var mcta = $("#mobile-cta");
+  if (mcta && "IntersectionObserver" in window) {
+    var zones = [$(".hero"), $("#contact"), $(".cta-band"), $("#site-footer")].filter(Boolean);
+    var mo2 = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { e.target._v = e.isIntersecting; });
+      var hide = zones.some(function (z) { return z._v; });
+      mcta.classList.toggle("hide", hide);
+    }, { threshold: 0 });
+    zones.forEach(function (z) { mo2.observe(z); });
+    mcta.classList.add("hide");
+  }
+
   /* ---------- Year ---------- */
   var yearEl = $("#year");
   if (yearEl) yearEl.textContent = String(new Date().getFullYear());
