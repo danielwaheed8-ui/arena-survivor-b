@@ -1,192 +1,1024 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-<title>Arena Survivor</title>
-<style>
-  :root {
-    --accent: #38e8ff;
-    --accent2: #ff3e9a;
-    --good: #4dff9e;
-    --warn: #ffd24d;
-    --bg0: #05060d;
-    --panel: rgba(10, 14, 28, 0.82);
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg0); }
-  body {
-    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-    color: #eaf2ff; cursor: crosshair; user-select: none;
-  }
-  #app { position: fixed; inset: 0; }
-  canvas { display: block; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#FF7A1A" />
+  <title>Mango Pediatrics · Concierge Pediatric Care in Jacksonville, FL — Dr. Rubina Azam, MD</title>
+  <meta name="description" content="Mango Pediatrics is a boutique concierge pediatric practice in Jacksonville, FL, led by board-certified pediatrician Dr. Rubina Azam, MD. Unhurried visits, direct access, same-day sick visits, and integrative whole-child care." />
+  <meta name="author" content="Mango Pediatrics" />
+  <link rel="canonical" href="https://www.mangopediatrics.com/" />
 
-  /* ---------- HUD ---------- */
-  #hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
-  #hud.hidden { display: none; }
-  .hud-top {
-    position: absolute; top: 18px; left: 0; right: 0;
-    display: flex; justify-content: space-between; align-items: flex-start;
-    padding: 0 26px;
-  }
-  .stat { font-weight: 700; letter-spacing: 0.5px; text-shadow: 0 2px 10px #000; }
-  .stat .label { font-size: 11px; opacity: 0.6; text-transform: uppercase; letter-spacing: 2px; }
-  .stat .value { font-size: 26px; }
-  #scoreBox .value { color: var(--accent); }
-  #waveBox { text-align: center; }
-  #waveBox .value { color: var(--accent2); }
-  #highBox { text-align: right; }
-  #highBox .value { color: var(--warn); font-size: 18px; }
+  <!-- Open Graph / social -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Mango Pediatrics" />
+  <meta property="og:title" content="Mango Pediatrics · Concierge Pediatric Care in Jacksonville, FL" />
+  <meta property="og:description" content="Boutique concierge pediatrics with Dr. Rubina Azam, MD. Unhurried visits, direct access, same-day sick care, and integrative whole-child medicine." />
+  <meta property="og:locale" content="en_US" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Mango Pediatrics · Concierge Pediatric Care in Jacksonville, FL" />
+  <meta name="twitter:description" content="Boutique concierge pediatrics with Dr. Rubina Azam, MD. Unhurried visits, direct access, and integrative whole-child care." />
 
-  .hud-bottom { position: absolute; left: 26px; bottom: 24px; width: 320px; }
-  .bar-wrap {
-    height: 22px; border-radius: 12px; background: rgba(255,255,255,0.08);
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12); overflow: hidden; position: relative;
-  }
-  #healthFill {
-    height: 100%; width: 100%;
-    background: linear-gradient(90deg, #ff5a5a, #ff9a5a 60%, var(--good));
-    transition: width 0.18s ease;
-  }
-  .bar-wrap .bar-label {
-    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 700; text-shadow: 0 1px 4px #000; letter-spacing: 1px;
-  }
-  #cooldownWrap { height: 6px; margin-top: 8px; border-radius: 4px; background: rgba(255,255,255,0.08); overflow: hidden; }
-  #cooldownFill { height: 100%; width: 100%; background: var(--accent); transition: width 0.05s linear; }
-  #buffRow { display: flex; gap: 8px; margin-top: 10px; }
-  .buff { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 10px; background: rgba(56,232,255,0.16); color: var(--accent); }
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="assets/img/favicon.svg" />
+  <link rel="manifest" href="site.webmanifest" />
 
-  #crosshair {
-    position: fixed; width: 26px; height: 26px; pointer-events: none; z-index: 11;
-    transform: translate(-50%, -50%); mix-blend-mode: screen;
-  }
-  #crosshair::before, #crosshair::after {
-    content: ""; position: absolute; background: var(--accent); box-shadow: 0 0 6px var(--accent);
-  }
-  #crosshair::before { left: 50%; top: 0; width: 2px; height: 100%; transform: translateX(-50%); }
-  #crosshair::after { top: 50%; left: 0; height: 2px; width: 100%; transform: translateY(-50%); }
+  <!-- Fonts: self-hosted, preloaded for fast first paint -->
+  <link rel="preload" href="assets/fonts/fraunces-796716.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="assets/fonts/jakarta-9f6257.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="assets/fonts/fonts.css" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
 
-  /* floating damage / score numbers */
-  #floaters { position: fixed; inset: 0; pointer-events: none; z-index: 12; overflow: hidden; }
-  .floater {
-    position: absolute; font-weight: 800; font-size: 16px; text-shadow: 0 2px 6px #000;
-    animation: floatUp 0.9s ease-out forwards; white-space: nowrap;
+  <!-- Structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": ["MedicalClinic", "Pediatric"],
+    "name": "Mango Pediatrics",
+    "description": "Boutique concierge pediatric practice in Jacksonville, FL offering unhurried visits, direct access, same-day sick visits, and integrative whole-child care.",
+    "medicalSpecialty": "Pediatric",
+    "url": "https://www.mangopediatrics.com/",
+    "telephone": "+1-904-853-1763",
+    "priceRange": "Concierge membership",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "6789 Southpoint Parkway, Suite 202",
+      "addressLocality": "Jacksonville",
+      "addressRegion": "FL",
+      "postalCode": "32216",
+      "addressCountry": "US"
+    },
+    "openingHoursSpecification": [
+      { "@type": "OpeningHoursSpecification", "dayOfWeek": "Monday", "opens": "09:00", "closes": "17:00" },
+      { "@type": "OpeningHoursSpecification", "dayOfWeek": "Tuesday", "opens": "09:00", "closes": "18:00" },
+      { "@type": "OpeningHoursSpecification", "dayOfWeek": "Thursday", "opens": "12:00", "closes": "19:00" },
+      { "@type": "OpeningHoursSpecification", "dayOfWeek": "Friday", "opens": "09:00", "closes": "17:00" },
+      { "@type": "OpeningHoursSpecification", "dayOfWeek": "Saturday", "opens": "08:00", "closes": "13:00" }
+    ],
+    "founder": {
+      "@type": "Physician",
+      "name": "Dr. Rubina Azam, MD",
+      "medicalSpecialty": "Pediatric",
+      "memberOf": "American Academy of Pediatrics"
+    }
   }
-  @keyframes floatUp {
-    0% { opacity: 0; transform: translate(-50%, 0) scale(0.6); }
-    20% { opacity: 1; transform: translate(-50%, -10px) scale(1.1); }
-    100% { opacity: 0; transform: translate(-50%, -52px) scale(1); }
-  }
-
-  /* ---------- Overlays ---------- */
-  .overlay {
-    position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; text-align: center;
-    background: radial-gradient(circle at 50% 35%, rgba(20,26,52,0.72), rgba(3,4,10,0.94));
-    backdrop-filter: blur(6px); transition: opacity 0.35s ease; gap: 18px;
-  }
-  .overlay.hidden { opacity: 0; pointer-events: none; }
-  .title {
-    font-size: 72px; font-weight: 900; letter-spacing: 2px; line-height: 1;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-    text-shadow: 0 0 40px rgba(56,232,255,0.35); animation: pulse 2.6s ease-in-out infinite;
-  }
-  @keyframes pulse { 0%,100%{ filter: brightness(1);} 50%{ filter: brightness(1.25);} }
-  .subtitle { font-size: 16px; opacity: 0.8; max-width: 520px; line-height: 1.6; }
-  .keys { font-size: 13px; opacity: 0.6; letter-spacing: 1px; }
-  .btn {
-    pointer-events: auto; cursor: pointer; font-size: 18px; font-weight: 800; letter-spacing: 1px;
-    padding: 14px 42px; border: none; border-radius: 40px; color: #04121a;
-    background: linear-gradient(90deg, var(--accent), #7af7ff);
-    box-shadow: 0 8px 30px rgba(56,232,255,0.4); transition: transform 0.12s ease, box-shadow 0.12s ease;
-  }
-  .btn:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 12px 40px rgba(56,232,255,0.6); }
-  .btn.secondary { background: linear-gradient(90deg, var(--accent2), #ff86bf); box-shadow: 0 8px 30px rgba(255,62,154,0.4); }
-  .big-score { font-size: 22px; }
-  .big-score b { color: var(--accent); font-size: 30px; }
-
-  /* upgrade screen */
-  #upgradeCards { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; max-width: 760px; }
-  .card {
-    pointer-events: auto; cursor: pointer; width: 168px; padding: 20px 16px; border-radius: 16px;
-    background: var(--panel); box-shadow: inset 0 0 0 1px rgba(56,232,255,0.25), 0 10px 30px rgba(0,0,0,0.5);
-    transition: transform 0.12s ease, box-shadow 0.12s ease;
-  }
-  .card:hover { transform: translateY(-4px); box-shadow: inset 0 0 0 1px var(--accent), 0 14px 40px rgba(56,232,255,0.35); }
-  .card.disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1); }
-  .card .ic { font-size: 34px; }
-  .card .cname { font-size: 16px; font-weight: 800; margin: 8px 0 4px; }
-  .card .clvl { font-size: 12px; opacity: 0.7; }
-  .card .ccost { margin-top: 10px; font-weight: 800; color: var(--warn); }
-
-  #pauseHint { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); font-size: 12px; opacity: 0.4; z-index: 9; letter-spacing: 2px; }
-</style>
-
-<!-- import map: three + addons via CDN ESM (loaded at runtime, no build step) -->
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-  }
-}
-</script>
+  </script>
 </head>
 <body>
-  <div id="app"></div>
+  <a class="skip-link" href="#main">Skip to content</a>
 
-  <div id="pauseHint">ESC PAUSE · WASD MOVE · MOUSE AIM · CLICK/SPACE FIRE · SHIFT DASH</div>
+  <!-- ============================================================= -->
+  <!-- Inline SVG icon sprite (decorative icons reference via <use>) -->
+  <!-- ============================================================= -->
+  <svg width="0" height="0" class="sprite" aria-hidden="true" focusable="false" style="position:absolute">
+    <defs>
+      <symbol id="i-mango" viewBox="0 0 24 24">
+        <path d="M16.8 6.2c2.5 1.7 3.6 5 2.6 8.1-1.2 3.8-5 6.6-8.9 6.6-3.4 0-6.6-2.3-7.4-5.7-.9-3.9 1.4-8.1 5.2-9.4 2.2-.8 4.8-.6 6.9.4" fill="currentColor" stroke="none"/>
+        <path d="M15.5 5.6c.7-1.5 2.2-2.5 3.9-2.6-.1 1.7-1 3.2-2.5 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </symbol>
+      <symbol id="i-leaf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 20c0-8 6-14 16-14 0 10-6 16-14 16-.7 0-1.4-.1-2-.2z"/>
+        <path d="M4 20C8 15 12 12 17 10"/>
+      </symbol>
+      <symbol id="i-stethoscope" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 3v5a4 4 0 0 0 8 0V3"/><path d="M4 3h2M12 3h2"/>
+        <path d="M9 15v1a5 5 0 0 0 10 0v-2"/><circle cx="19" cy="12" r="2.2"/>
+      </symbol>
+      <symbol id="i-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 20s-7-4.4-9.3-8.6C1.2 8.6 2.6 5.3 5.7 5c1.9-.2 3.4.9 4.3 2.3.9-1.4 2.4-2.5 4.3-2.3 3.1.3 4.5 3.6 3 6.4C19 15.6 12 20 12 20z"/>
+      </symbol>
+      <symbol id="i-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 12h4l2-5 4 12 3-9 2 2h5"/>
+      </symbol>
+      <symbol id="i-baby" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="7" r="3.2"/><path d="M9.5 6.5c.6.5 1.4.8 2.5.8s1.9-.3 2.5-.8"/>
+        <path d="M6 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M12 14v6"/>
+      </symbol>
+      <symbol id="i-syringe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 2l4 4"/><path d="M15 5l4 4"/><path d="M17 7 7 17l-3 .8L3 21l-.8-.2L4 18l1-3L15 5"/><path d="M9 11l3 3M12 8l3 3"/>
+      </symbol>
+      <symbol id="i-video" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2.5" y="6" width="13" height="12" rx="3"/><path d="M15.5 10l6-3v10l-6-3z"/>
+      </symbol>
+      <symbol id="i-brain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 5.5A3 3 0 0 0 6.5 7 3 3 0 0 0 5 12a3 3 0 0 0 1.5 5A3 3 0 0 0 12 18.5z"/>
+        <path d="M12 5.5A3 3 0 0 1 17.5 7 3 3 0 0 1 19 12a3 3 0 0 1-1.5 5A3 3 0 0 1 12 18.5z"/>
+        <path d="M12 5.5v13"/>
+      </symbol>
+      <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3.5" y="5" width="17" height="16" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8 14h3M8 17.5h6"/>
+      </symbol>
+      <symbol id="i-thermometer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 14.8V5a2.5 2.5 0 0 0-5 0v9.8a4.5 4.5 0 1 0 5 0z"/><path d="M11.5 15.2V9"/>
+      </symbol>
+      <symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20"/>
+      </symbol>
+      <symbol id="i-pill" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2.8" y="8.5" width="18.4" height="7" rx="3.5" transform="rotate(-45 12 12)"/><path d="M8.7 8.7l6.6 6.6"/>
+      </symbol>
+      <symbol id="i-compass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>
+      </symbol>
+      <symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 15l6-6"/><path d="M10.5 6.5l1-1a4 4 0 0 1 6 6l-1 1"/><path d="M13.5 17.5l-1 1a4 4 0 0 1-6-6l1-1"/>
+      </symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/>
+      </symbol>
+      <symbol id="i-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v7A2.5 2.5 0 0 1 17.5 15H9l-4 4v-4H6.5"/>
+        <path d="M8 8h8M8 11h5"/>
+      </symbol>
+      <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.2a3.2 3.2 0 0 1 0 5.6"/><path d="M17 13.6A5.5 5.5 0 0 1 20.5 19"/>
+      </symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>
+      </symbol>
+      <symbol id="i-sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M18.5 15.5l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/>
+      </symbol>
+      <symbol id="i-hands" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 21s-6.5-4-6.5-9.2a3.3 3.3 0 0 1 6.5-.9 3.3 3.3 0 0 1 6.5.9C18.5 17 12 21 12 21z"/>
+        <path d="M12 6.5c.6-1.4 2-2.2 3.4-2"/>
+      </symbol>
+      <symbol id="i-growth" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 20V4"/><path d="M4 20h16"/><path d="M4 20h4v-5H4M8 20h4v-9H8M12 20h4V7h-4"/>
+      </symbol>
+      <symbol id="i-map-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 21c4-4 7-7.4 7-11a7 7 0 1 0-14 0c0 3.6 3 7 7 11z"/><circle cx="12" cy="10" r="2.6"/>
+      </symbol>
+      <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 5.5C4 4.7 4.7 4 5.5 4H8l1.5 4-2 1.5a11 11 0 0 0 5 5l1.5-2 4 1.5v2.5c0 .8-.7 1.5-1.5 1.5A15 15 0 0 1 4 5.5z"/>
+      </symbol>
+      <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="5" width="18" height="14" rx="3"/><path d="M4 7l8 5.5L20 7"/>
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12.5l4.5 4.5L19 7"/>
+      </symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12h14M13 6l6 6-6 6"/>
+      </symbol>
+      <symbol id="i-quote" viewBox="0 0 24 24"><path d="M9.5 6C6.5 7.3 4.8 9.9 4.8 13.2c0 2.6 1.5 4.3 3.6 4.3 1.8 0 3.2-1.3 3.2-3.1 0-1.7-1.2-3-2.9-3-.3 0-.7 0-.9.1.3-1.6 1.6-3 3.3-3.7L9.5 6zm8.4 0c-3 1.3-4.7 3.9-4.7 7.2 0 2.6 1.5 4.3 3.6 4.3 1.8 0 3.2-1.3 3.2-3.1 0-1.7-1.2-3-2.9-3-.3 0-.7 0-.9.1.3-1.6 1.6-3 3.3-3.7L17.9 6z" fill="currentColor"/></symbol>
+      <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.2l2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.6 9.3l5.8-.8z" fill="currentColor"/></symbol>
+      <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+      <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+      <symbol id="i-chevron-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></symbol>
+      <symbol id="i-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M15 9V6.5A2.5 2.5 0 0 0 12.5 4h-6A2.5 2.5 0 0 0 4 6.5v6A2.5 2.5 0 0 0 6.5 15H9"/></symbol>
+    </defs>
+  </svg>
 
-  <!-- HUD -->
-  <div id="hud" class="hidden">
-    <div class="hud-top">
-      <div class="stat" id="scoreBox"><div class="label">Score</div><div class="value" id="scoreVal">0</div></div>
-      <div class="stat" id="waveBox"><div class="label">Wave</div><div class="value" id="waveVal">1</div></div>
-      <div class="stat" id="highBox"><div class="label">Best</div><div class="value" id="highVal">0</div></div>
+  <!-- Slim concierge announcement bar -->
+  <div class="announce" role="note">
+    <div class="wrap announce__inner">
+      <p class="announce__text"><span class="announce__dot" aria-hidden="true"></span> Now welcoming a limited number of new families &mdash; your first meet &amp; greet is complimentary.</p>
+      <a class="announce__link" href="tel:+19048531763"><svg class="ic" aria-hidden="true"><use href="#i-phone"></use></svg> 904&#8209;853&#8209;1763</a>
     </div>
-    <div class="hud-bottom">
-      <div class="bar-wrap"><div id="healthFill"></div><div class="bar-label" id="healthLabel">100 / 100</div></div>
-      <div id="cooldownWrap"><div id="cooldownFill"></div></div>
-      <div id="buffRow"></div>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- Header / Navigation                                           -->
+  <!-- ============================================================= -->
+  <header class="site-header" id="site-header">
+    <div class="wrap site-header__inner">
+      <a class="brand" href="#top" aria-label="Mango Pediatrics home">
+        <span class="brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 44 44" width="44" height="44">
+            <defs>
+              <radialGradient id="brandMango" cx="35%" cy="30%" r="80%">
+                <stop offset="0%" stop-color="#FFD36B"/><stop offset="45%" stop-color="#FF9E2C"/><stop offset="100%" stop-color="#F2631B"/>
+              </radialGradient>
+            </defs>
+            <circle cx="22" cy="22" r="22" fill="#FFF3DE"/>
+            <path d="M30 14.5c3.2 2.3 4.4 6.8 2.9 10.7-1.7 4.4-6.3 7.4-10.9 7-4.2-.4-7.9-3.6-8.4-7.8-.6-4.8 2.6-9.6 7.3-10.9 2.9-.8 6.2-.3 9.1 1z" fill="url(#brandMango)"/>
+            <path d="M27.6 12.7c.7-2 2.6-3.4 4.8-3.5-.1 2.2-1.4 4.1-3.4 5" fill="none" stroke="#4E9B5E" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+            <ellipse cx="18.5" cy="19" rx="3.1" ry="4.2" fill="#fff" opacity=".45"/>
+          </svg>
+        </span>
+        <span class="brand__text">
+          <span class="brand__name">Mango<span>Pediatrics</span></span>
+          <span class="brand__tag">Concierge pediatric care</span>
+        </span>
+      </a>
+
+      <nav class="nav" aria-label="Primary">
+        <ul class="nav__list" id="nav-list">
+          <li><a href="#care">Care Model</a></li>
+          <li><a href="#services">Services</a></li>
+          <li><a href="#doctor">Meet Dr. Azam</a></li>
+          <li><a href="#why">Why Mango</a></li>
+          <li><a href="#resources">Resources</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </nav>
+
+      <div class="site-header__actions">
+        <a class="btn btn--primary" href="#contact">Schedule a meet &amp; greet</a>
+        <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="mobile-menu" aria-label="Open menu">
+          <svg class="ic" aria-hidden="true"><use href="#i-menu"></use></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile menu -->
+  <div class="mobile-menu" id="mobile-menu" hidden>
+    <div class="mobile-menu__panel" role="dialog" aria-modal="true" aria-label="Menu">
+      <div class="mobile-menu__head">
+        <span class="brand__name brand__name--sm">Mango<span>Pediatrics</span></span>
+        <button class="nav-toggle" id="nav-close" aria-label="Close menu">
+          <svg class="ic" aria-hidden="true"><use href="#i-close"></use></svg>
+        </button>
+      </div>
+      <nav aria-label="Mobile">
+        <ul class="mobile-menu__list">
+          <li><a href="#care">Care Model</a></li>
+          <li><a href="#services">Services</a></li>
+          <li><a href="#doctor">Meet Dr. Azam</a></li>
+          <li><a href="#why">Why Mango</a></li>
+          <li><a href="#testimonials">Parents</a></li>
+          <li><a href="#resources">Resources</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </nav>
+      <div class="mobile-menu__cta">
+        <a class="btn btn--primary btn--block" href="#contact">Schedule a meet &amp; greet</a>
+        <a class="btn btn--ghost btn--block" href="tel:+19048531763">
+          <svg class="ic" aria-hidden="true"><use href="#i-phone"></use></svg> Call or text 904&#8209;853&#8209;1763
+        </a>
+      </div>
     </div>
   </div>
-  <div id="crosshair"></div>
-  <div id="floaters"></div>
 
-  <!-- Main menu -->
-  <div id="menuOverlay" class="overlay">
-    <div class="title">ARENA SURVIVOR</div>
-    <div class="subtitle">Survive escalating waves in a neon arena. Dodge, blast, upgrade — a boss hunts you every 5th wave.</div>
-    <button class="btn" id="playBtn">PLAY</button>
-    <div class="keys">WASD move · mouse aim · click / space fire · shift dash · esc pause</div>
-  </div>
+  <main id="main">
+    <span id="top"></span>
 
-  <!-- Pause -->
-  <div id="pauseOverlay" class="overlay hidden">
-    <div class="title" style="font-size:56px;">PAUSED</div>
-    <button class="btn" id="resumeBtn">RESUME</button>
-    <button class="btn secondary" id="quitBtn">QUIT TO MENU</button>
-  </div>
+    <!-- ============================================================= -->
+    <!-- Hero                                                           -->
+    <!-- ============================================================= -->
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero__bg" aria-hidden="true">
+        <span class="blob blob--1"></span>
+        <span class="blob blob--2"></span>
+        <span class="blob blob--3"></span>
+        <span class="float-leaf float-leaf--a"><svg viewBox="0 0 24 24"><use href="#i-leaf"></use></svg></span>
+        <span class="float-leaf float-leaf--b"><svg viewBox="0 0 24 24"><use href="#i-leaf"></use></svg></span>
+        <span class="float-dot float-dot--a"></span>
+        <span class="float-dot float-dot--b"></span>
+        <span class="float-dot float-dot--c"></span>
+      </div>
 
-  <!-- Between-wave upgrade -->
-  <div id="upgradeOverlay" class="overlay hidden">
-    <div class="title" style="font-size:48px;">WAVE <span id="upWaveNum">1</span> CLEARED</div>
-    <div class="big-score">Score to spend: <b id="upScore">0</b></div>
-    <div id="upgradeCards"></div>
-    <button class="btn" id="nextWaveBtn">NEXT WAVE ▸</button>
-  </div>
+      <div class="wrap hero__inner">
+        <div class="hero__copy">
+          <p class="eyebrow reveal" data-reveal>
+            <span class="eyebrow__pin"><svg class="ic" aria-hidden="true"><use href="#i-map-pin"></use></svg></span>
+            Concierge pediatrics in Jacksonville, FL
+          </p>
+          <h1 class="hero__title reveal" data-reveal id="hero-title">
+            Unhurried, whole&#8209;child care your family will <span class="tx-grad">actually love</span>.
+          </h1>
+          <p class="hero__lead reveal" data-reveal>
+            Mango Pediatrics is a boutique concierge practice led by
+            <strong>Dr.&nbsp;Rubina&nbsp;Azam,&nbsp;MD</strong> &mdash; board&#8209;certified, integrative,
+            and genuinely present. A small panel, direct access, and same&#8209;day sick visits.
+            The kind of pediatric care you thought didn&rsquo;t exist anymore.
+          </p>
+          <div class="hero__cta reveal" data-reveal>
+            <a class="btn btn--primary btn--lg" href="#contact">
+              Schedule a free meet &amp; greet
+              <svg class="ic ic--trail" aria-hidden="true"><use href="#i-arrow"></use></svg>
+            </a>
+            <a class="btn btn--soft btn--lg" href="tel:+19048531763">
+              <svg class="ic" aria-hidden="true"><use href="#i-phone"></use></svg>
+              Call or text 904&#8209;853&#8209;1763
+            </a>
+          </div>
+          <ul class="hero__badges reveal" data-reveal aria-label="Practice highlights">
+            <li><svg class="ic" aria-hidden="true"><use href="#i-shield"></use></svg> Board&#8209;certified pediatrician</li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-leaf"></use></svg> Integrative medicine</li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-pulse"></use></svg> Same&#8209;day sick visits</li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-chat"></use></svg> Direct access to Dr.&nbsp;Azam</li>
+          </ul>
+        </div>
 
-  <!-- Game over -->
-  <div id="overOverlay" class="overlay hidden">
-    <div class="title" style="font-size:64px;">GAME OVER</div>
-    <div class="big-score">Score <b id="finalScore">0</b></div>
-    <div class="subtitle" id="overMsg">You reached wave 1.</div>
-    <button class="btn" id="restartBtn">PLAY AGAIN</button>
-  </div>
+        <div class="hero__art reveal" data-reveal aria-hidden="true">
+          <div class="hero-scene">
+            <!-- Bespoke pediatric illustration: pediatrician and child -->
+            <svg class="hero-illo" viewBox="0 0 540 560" role="img" aria-label="Illustration of a pediatrician caring for a happy child">
+              <defs>
+                <linearGradient id="cardGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#FFFDF8"/><stop offset="100%" stop-color="#FFF3E0"/>
+                </linearGradient>
+                <linearGradient id="mangoBig" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#FFD36B"/><stop offset="50%" stop-color="#FF9E2C"/><stop offset="100%" stop-color="#F2631B"/>
+                </linearGradient>
+                <linearGradient id="coat" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#F3F6FA"/>
+                </linearGradient>
+                <linearGradient id="scrub" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#54B2C9"/><stop offset="100%" stop-color="#2E8DA8"/>
+                </linearGradient>
+                <linearGradient id="childShirt" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#FF8A5B"/><stop offset="100%" stop-color="#F26A3B"/>
+                </linearGradient>
+              </defs>
 
-  <script type="module" src="./main.js"></script>
+              <!-- soft backdrop -->
+              <rect x="20" y="34" width="500" height="500" rx="72" fill="url(#cardGrad)"/>
+              <circle cx="270" cy="284" r="196" fill="#FFE7C2" opacity=".55"/>
+              <circle cx="270" cy="284" r="150" fill="#FFF6E6"/>
+
+              <!-- decorative leaves in corner -->
+              <g opacity=".9">
+                <path d="M92 96c-6 26 8 46 34 52-4-27-16-43-34-52z" fill="#7FC28C"/>
+                <path d="M92 96c14 12 24 27 30 44" fill="none" stroke="#4E9B5E" stroke-width="2.4" stroke-linecap="round"/>
+              </g>
+
+              <!-- pediatrician figure -->
+              <g>
+                <!-- coat body -->
+                <path d="M150 470c0-70 22-118 66-118 8 0 15 1 22 3 7-2 14-3 22-3 44 0 66 48 66 118z" fill="url(#coat)"/>
+                <!-- scrub V under coat -->
+                <path d="M238 355c-8 22-8 46 0 74 8-28 8-52 0-74z" fill="url(#scrub)"/>
+                <!-- neck -->
+                <rect x="224" y="322" width="28" height="34" rx="12" fill="#F2C09A"/>
+                <!-- head -->
+                <circle cx="238" cy="300" r="40" fill="#F6C9A4"/>
+                <!-- hair -->
+                <path d="M198 300c-2-30 18-52 40-52s42 20 40 52c-6-6-10-16-10-24-10 12-40 16-58 6-2 8-6 14-12 18z" fill="#3B2B2B"/>
+                <path d="M198 300c0 18 4 30 8 40-14-6-16-32-8-40z" fill="#3B2B2B"/>
+                <path d="M278 300c0 18-4 30-8 40 14-6 16-32 8-40z" fill="#3B2B2B"/>
+                <!-- face -->
+                <circle cx="226" cy="300" r="3.1" fill="#4a3b32"/>
+                <circle cx="252" cy="300" r="3.1" fill="#4a3b32"/>
+                <path d="M230 312c4 4 10 4 14 0" fill="none" stroke="#c9784f" stroke-width="2.6" stroke-linecap="round"/>
+                <circle cx="219" cy="308" r="5" fill="#FF9E7A" opacity=".45"/>
+                <circle cx="259" cy="308" r="5" fill="#FF9E7A" opacity=".45"/>
+                <!-- stethoscope -->
+                <path d="M226 356c-6 26-2 54 6 74" fill="none" stroke="#2E8DA8" stroke-width="5" stroke-linecap="round"/>
+                <path d="M250 356c8 20 4 44-8 60" fill="none" stroke="#2E8DA8" stroke-width="5" stroke-linecap="round"/>
+                <circle cx="240" cy="424" r="10" fill="#2E8DA8"/>
+                <circle cx="240" cy="424" r="4.5" fill="#BFE6F0"/>
+                <!-- arm around child -->
+                <path d="M296 372c26 6 44 26 46 54-16 6-30 4-40-6" fill="url(#coat)"/>
+              </g>
+
+              <!-- child figure (seated, happy) -->
+              <g>
+                <path d="M300 476c0-38 18-64 46-64s46 26 46 64z" fill="url(#childShirt)"/>
+                <rect x="336" y="392" width="20" height="24" rx="9" fill="#EBB68C"/>
+                <circle cx="346" cy="374" r="30" fill="#F4C29B"/>
+                <path d="M316 372c0-22 14-38 30-38s30 16 30 38c-5-5-9-12-9-18-9 10-30 12-42 4-1 6-4 11-9 14z" fill="#5a3d2b"/>
+                <circle cx="337" cy="374" r="2.7" fill="#4a3b32"/>
+                <circle cx="357" cy="374" r="2.7" fill="#4a3b32"/>
+                <path d="M339 384c4 4 10 4 14 0" fill="none" stroke="#c9784f" stroke-width="2.4" stroke-linecap="round"/>
+                <circle cx="330" cy="381" r="4.3" fill="#FF9E7A" opacity=".5"/>
+                <circle cx="363" cy="381" r="4.3" fill="#FF9E7A" opacity=".5"/>
+                <!-- child holding a little mango -->
+                <circle cx="322" cy="452" r="15" fill="url(#mangoBig)"/>
+                <path d="M320 439c1-4 5-6 9-6-.4 4-3 7-7 8" fill="none" stroke="#4E9B5E" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+              </g>
+
+              <!-- floating hearts -->
+              <g class="illo-heart" opacity=".9">
+                <path d="M410 150c-2-8 4-14 11-11 3 1 5 4 5 7 0-3 2-6 5-7 7-3 13 3 11 11-2 9-16 16-16 16s-14-7-16-16z" fill="#FF7A6E"/>
+              </g>
+            </svg>
+
+            <!-- floating glass info cards -->
+            <div class="hero-chip hero-chip--visit">
+              <span class="hero-chip__ic hero-chip__ic--blue"><svg class="ic" aria-hidden="true"><use href="#i-pulse"></use></svg></span>
+              <span class="hero-chip__tx"><b>Same&#8209;day</b> sick visits</span>
+            </div>
+            <div class="hero-chip hero-chip--access">
+              <span class="hero-chip__ic hero-chip__ic--green"><svg class="ic" aria-hidden="true"><use href="#i-chat"></use></svg></span>
+              <span class="hero-chip__tx"><b>Direct line</b> to Dr.&nbsp;Azam</span>
+            </div>
+            <div class="hero-chip hero-chip--years">
+              <span class="hero-chip__big">15+</span>
+              <span class="hero-chip__tx">years caring<br/>for kids</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-wave" aria-hidden="true">
+        <svg viewBox="0 0 1440 90" preserveAspectRatio="none"><path d="M0 60c180-40 360-40 540-14s360 66 540 40 200-40 360-46v110H0z" fill="#FFFFFF"/></svg>
+      </div>
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- Stats strip                                                   -->
+    <!-- ============================================================= -->
+    <section class="stats" aria-label="Practice at a glance">
+      <div class="wrap stats__grid">
+        <div class="stat reveal" data-reveal>
+          <span class="stat__num" data-count="15" data-suffix="+">15+</span>
+          <span class="stat__label">Years caring for children</span>
+        </div>
+        <div class="stat reveal" data-reveal>
+          <span class="stat__num"><span data-count="30">30</span>&ndash;<span data-count="60">60</span></span>
+          <span class="stat__label">Minutes per visit, unhurried</span>
+        </div>
+        <div class="stat reveal" data-reveal>
+          <span class="stat__num">Same&#8209;day</span>
+          <span class="stat__label">Sick visits for members</span>
+        </div>
+        <div class="stat reveal" data-reveal>
+          <span class="stat__num" data-count="2013" data-plain="true">2013</span>
+          <span class="stat__label">Integrative medicine diplomate</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- Concierge / Care model                                        -->
+    <!-- ============================================================= -->
+    <section class="section care" id="care" aria-labelledby="care-title">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow eyebrow--center" data-reveal>The Mango difference</p>
+          <h2 class="section-title" id="care-title" data-reveal>
+            Concierge pediatrics, built around your family &mdash; not a ten&#8209;minute clock.
+          </h2>
+          <p class="section-sub" data-reveal>
+            No rushed appointments. No revolving door of providers. Just a small, intentional panel of
+            families who get real, direct access to their pediatrician.
+          </p>
+        </div>
+
+        <div class="card-grid card-grid--3">
+          <article class="feature-card reveal" data-reveal>
+            <span class="feature-card__ic"><svg class="ic" aria-hidden="true"><use href="#i-clock"></use></svg></span>
+            <h3>Unhurried 30&ndash;60 minute visits</h3>
+            <p>We keep visits long enough to truly listen, examine carefully, and answer every question you have.</p>
+          </article>
+          <article class="feature-card reveal" data-reveal>
+            <span class="feature-card__ic"><svg class="ic" aria-hidden="true"><use href="#i-chat"></use></svg></span>
+            <h3>Direct access to Dr.&nbsp;Azam</h3>
+            <p>Call, text, or email your pediatrician directly &mdash; no phone trees and no gatekeepers between you.</p>
+          </article>
+          <article class="feature-card reveal" data-reveal>
+            <span class="feature-card__ic"><svg class="ic" aria-hidden="true"><use href="#i-pulse"></use></svg></span>
+            <h3>Same&#8209;day sick visits</h3>
+            <p>When your child spikes a fever, you get seen today &mdash; not squeezed in next week.</p>
+          </article>
+          <article class="feature-card reveal" data-reveal>
+            <span class="feature-card__ic"><svg class="ic" aria-hidden="true"><use href="#i-users"></use></svg></span>
+            <h3>A small, intentional panel</h3>
+            <p>We limit how many families we serve so every child receives our full, focused attention.</p>
+          </article>
+          <article class="feature-card reveal" data-reveal>
+            <span class="feature-card__ic"><svg class="ic" aria-hidden="true"><use href="#i-leaf"></use></svg></span>
+            <h3>Whole&#8209;child, root&#8209;cause care</h3>
+            <p>An integrative, holistic lens &mdash; we look beyond symptoms to how your child truly thrives.</p>
+          </article>
+          <article class="feature-card reveal" data-reveal>
+            <span class="feature-card__ic"><svg class="ic" aria-hidden="true"><use href="#i-heart"></use></svg></span>
+            <h3>No rushed appointments</h3>
+            <p>Ever. Your family is never reduced to a ten&#8209;minute slot or a number on a chart.</p>
+          </article>
+        </div>
+
+        <div class="care__cta reveal" data-reveal>
+          <p>Curious whether concierge care is right for your family?</p>
+          <a class="btn btn--primary" href="#contact">Book a complimentary meet &amp; greet <svg class="ic ic--trail" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- Services                                                      -->
+    <!-- ============================================================= -->
+    <section class="section services" id="services" aria-labelledby="services-title">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow eyebrow--center" data-reveal>What we care for</p>
+          <h2 class="section-title" id="services-title" data-reveal>Complete pediatric care, from first breath to first job.</h2>
+          <p class="section-sub" data-reveal>
+            Comprehensive, evidence&#8209;based services delivered with warmth &mdash; supporting your child at every
+            stage from newborn to young adult.
+          </p>
+        </div>
+
+        <div class="card-grid card-grid--3 services__grid">
+          <article class="service-card reveal" data-reveal>
+            <span class="service-card__ic"><svg class="ic" aria-hidden="true"><use href="#i-calendar"></use></svg></span>
+            <h3>Well Checks</h3>
+            <p>Comprehensive well&#8209;child visits that track growth, development, and milestones at every age.</p>
+            <a class="link-arrow" href="#contact">Learn more <svg class="ic" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
+          </article>
+          <article class="service-card reveal" data-reveal>
+            <span class="service-card__ic"><svg class="ic" aria-hidden="true"><use href="#i-thermometer"></use></svg></span>
+            <h3>Sick Visits</h3>
+            <p>Same&#8209;day care when your child isn&rsquo;t feeling their best &mdash; with calm, unhurried attention.</p>
+            <a class="link-arrow" href="#contact">Learn more <svg class="ic" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
+          </article>
+          <article class="service-card reveal" data-reveal>
+            <span class="service-card__ic"><svg class="ic" aria-hidden="true"><use href="#i-video"></use></svg></span>
+            <h3>Telehealth</h3>
+            <p>Secure virtual visits for guidance, follow&#8209;ups, and reassurance &mdash; from the comfort of home.</p>
+            <a class="link-arrow" href="#contact">Learn more <svg class="ic" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
+          </article>
+          <article class="service-card reveal" data-reveal>
+            <span class="service-card__ic"><svg class="ic" aria-hidden="true"><use href="#i-baby"></use></svg></span>
+            <h3>Newborn Care</h3>
+            <p>Gentle, attentive support for your baby&rsquo;s very first days, weeks, and precious early months.</p>
+            <a class="link-arrow" href="#contact">Learn more <svg class="ic" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
+          </article>
+          <article class="service-card reveal" data-reveal>
+            <span class="service-card__ic"><svg class="ic" aria-hidden="true"><use href="#i-syringe"></use></svg></span>
+            <h3>Immunizations</h3>
+            <p>Evidence&#8209;based vaccines on a schedule that fits your family, explained clearly and without pressure.</p>
+            <a class="link-arrow" href="#contact">Learn more <svg class="ic" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
+          </article>
+          <article class="service-card reveal" data-reveal>
+            <span class="service-card__ic"><svg class="ic" aria-hidden="true"><use href="#i-brain"></use></svg></span>
+            <h3>Behavioral Health</h3>
+            <p>Compassionate support for development, behavior, sleep, and your child&rsquo;s emotional wellbeing.</p>
+            <a class="link-arrow" href="#contact">Learn more <svg class="ic" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
+          </article>
+        </div>
+
+        <div class="services__banner reveal" data-reveal>
+          <div class="services__banner-ic"><svg class="ic" aria-hidden="true"><use href="#i-shield"></use></svg></div>
+          <div class="services__banner-tx">
+            <h3>Vaccine schedule &amp; family resources</h3>
+            <p>Clear, up&#8209;to&#8209;date guidance so you always know what&rsquo;s next &mdash; plus dosing help, patient forms, and trusted references.</p>
+          </div>
+          <a class="btn btn--soft" href="#resources">Explore resources <svg class="ic ic--trail" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- Meet Dr. Azam                                                 -->
+    <!-- ============================================================= -->
+    <section class="section doctor" id="doctor" aria-labelledby="doctor-title">
+      <div class="wrap doctor__inner">
+        <div class="doctor__media reveal" data-reveal>
+          <div class="doctor-card">
+            <div class="doctor-card__portrait" role="img" aria-label="Portrait illustration of Dr. Rubina Azam, MD">
+              <svg viewBox="0 0 320 360" class="doctor-illo">
+                <defs>
+                  <linearGradient id="docBg" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#FFE9C4"/><stop offset="100%" stop-color="#FFD59B"/>
+                  </linearGradient>
+                  <linearGradient id="docCoat" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#EEF3F8"/>
+                  </linearGradient>
+                </defs>
+                <rect x="0" y="0" width="320" height="360" rx="34" fill="url(#docBg)"/>
+                <circle cx="160" cy="150" r="104" fill="#FFF4E0" opacity=".7"/>
+                <!-- shoulders / coat -->
+                <path d="M60 360c0-64 40-104 100-104s100 40 100 104z" fill="url(#docCoat)"/>
+                <path d="M150 262c-6 20-6 42 0 66 6-24 6-46 0-66z" fill="#54B2C9"/>
+                <path d="M139 258l21 14 21-14-4 22h-34z" fill="#EFF4F8"/>
+                <!-- neck -->
+                <rect x="145" y="222" width="30" height="40" rx="13" fill="#EAB78D"/>
+                <!-- head -->
+                <circle cx="160" cy="188" r="52" fill="#F4C299"/>
+                <!-- hair -->
+                <path d="M108 188c-4-40 24-70 52-70s56 30 52 70c-6-10-12-24-12-34-14 16-52 20-74 8-2 12-10 20-18 26z" fill="#33241f"/>
+                <path d="M108 190c-2 30 6 52 14 66-22-10-28-52-14-66z" fill="#33241f"/>
+                <path d="M212 190c2 30-6 52-14 66 22-10 28-52 14-66z" fill="#33241f"/>
+                <!-- face -->
+                <circle cx="144" cy="188" r="3.8" fill="#4a3b32"/>
+                <circle cx="176" cy="188" r="3.8" fill="#4a3b32"/>
+                <path d="M150 203c6 5 14 5 20 0" fill="none" stroke="#c9784f" stroke-width="3" stroke-linecap="round"/>
+                <circle cx="134" cy="198" r="6.5" fill="#FF9E7A" opacity=".45"/>
+                <circle cx="186" cy="198" r="6.5" fill="#FF9E7A" opacity=".45"/>
+                <!-- stethoscope -->
+                <path d="M146 262c-8 26-4 54 6 74" fill="none" stroke="#2E8DA8" stroke-width="6" stroke-linecap="round"/>
+                <path d="M174 262c10 22 4 50-10 66" fill="none" stroke="#2E8DA8" stroke-width="6" stroke-linecap="round"/>
+                <circle cx="160" cy="338" r="12" fill="#2E8DA8"/>
+                <circle cx="160" cy="338" r="5" fill="#BFE6F0"/>
+                <!-- little mango pin on coat -->
+                <circle cx="206" cy="300" r="12" fill="#FF9E2C"/>
+                <path d="M203 289c1-4 5-6 9-5-.4 4-3 6-7 7" fill="none" stroke="#4E9B5E" stroke-width="2.2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="doctor-card__meta">
+              <p class="doctor-card__name">Dr. Rubina Azam, <span>MD</span></p>
+              <p class="doctor-card__role">Founder &amp; Pediatrician</p>
+              <ul class="doctor-card__creds">
+                <li><svg class="ic" aria-hidden="true"><use href="#i-check"></use></svg> Board&#8209;Certified Pediatrician (FAAP)</li>
+                <li><svg class="ic" aria-hidden="true"><use href="#i-check"></use></svg> Integrative &amp; Holistic Medicine (ABIHM)</li>
+                <li><svg class="ic" aria-hidden="true"><use href="#i-check"></use></svg> 15+ years of pediatric experience</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="doctor__body">
+          <p class="eyebrow" data-reveal>Meet your pediatrician</p>
+          <h2 class="section-title section-title--left" id="doctor-title" data-reveal>
+            Care that knows your child by name &mdash; and by heart.
+          </h2>
+          <div class="doctor__bio" data-reveal>
+            <p>
+              For more than 15 years, <strong>Dr.&nbsp;Rubina&nbsp;Azam</strong> has cared for newborns, children,
+              and teens with a rare combination of deep clinical expertise and genuine warmth. She practices
+              with a conservative, preventive mindset &mdash; pairing modern, evidence&#8209;based medicine with an
+              integrative, whole&#8209;child approach that seeks the root cause, not just the symptom.
+            </p>
+            <p>
+              Dr.&nbsp;Azam founded Mango Pediatrics to practice medicine the way she always believed it should be:
+              unhurried, personal, and built around real relationships with the families she serves.
+            </p>
+          </div>
+
+          <ul class="training reveal" data-reveal aria-label="Training and credentials">
+            <li>
+              <span class="training__ic"><svg class="ic" aria-hidden="true"><use href="#i-shield"></use></svg></span>
+              <div><b>Residency &mdash; Pediatrics &amp; Adolescent Medicine</b><span>Howard University Hospital (Washington, DC) &amp; Austin Children&rsquo;s Hospital (Austin, TX)</span></div>
+            </li>
+            <li>
+              <span class="training__ic"><svg class="ic" aria-hidden="true"><use href="#i-baby"></use></svg></span>
+              <div><b>Advanced fellowship &mdash; Neonatal Intensive Care (NICU)</b><span>The Hospital for Sick Children, Toronto</span></div>
+            </li>
+            <li>
+              <span class="training__ic"><svg class="ic" aria-hidden="true"><use href="#i-leaf"></use></svg></span>
+              <div><b>Fellowship&#8209;trained in Integrative Medicine</b><span>University of Arizona &mdash; program founded by Dr.&nbsp;Andrew&nbsp;Weil</span></div>
+            </li>
+            <li>
+              <span class="training__ic"><svg class="ic" aria-hidden="true"><use href="#i-sparkle"></use></svg></span>
+              <div><b>Diplomate, American Board of Integrative &amp; Holistic Medicine</b><span>Since 2013</span></div>
+            </li>
+          </ul>
+
+          <div class="doctor__cta" data-reveal>
+            <a class="btn btn--primary" href="#contact">Schedule a meet &amp; greet</a>
+            <a class="btn btn--ghost" href="tel:+19048531763"><svg class="ic" aria-hidden="true"><use href="#i-phone"></use></svg> 904&#8209;853&#8209;1763</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- Why families choose Mango                                     -->
+    <!-- ============================================================= -->
+    <section class="section why" id="why" aria-labelledby="why-title">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow eyebrow--center" data-reveal>Why families choose Mango</p>
+          <h2 class="section-title" id="why-title" data-reveal>Everything a pediatric practice should be &mdash; and rarely is.</h2>
+        </div>
+        <div class="why__grid">
+          <article class="why-card reveal" data-reveal>
+            <span class="why-card__ic why-card__ic--coral"><svg class="ic" aria-hidden="true"><use href="#i-hands"></use></svg></span>
+            <h3>Family&#8209;first, compassionate care</h3>
+            <p>You&rsquo;re treated like family &mdash; heard, respected, and supported through every season of childhood.</p>
+          </article>
+          <article class="why-card reveal" data-reveal>
+            <span class="why-card__ic why-card__ic--mango"><svg class="ic" aria-hidden="true"><use href="#i-shield"></use></svg></span>
+            <h3>Board&#8209;certified expertise</h3>
+            <p>Care led by a board&#8209;certified pediatrician with 15+ years and elite training behind every decision.</p>
+          </article>
+          <article class="why-card reveal" data-reveal>
+            <span class="why-card__ic why-card__ic--green"><svg class="ic" aria-hidden="true"><use href="#i-leaf"></use></svg></span>
+            <h3>Integrative &amp; holistic approach</h3>
+            <p>Modern medicine paired with root&#8209;cause thinking &mdash; nutrition, sleep, environment, and the whole child.</p>
+          </article>
+          <article class="why-card reveal" data-reveal>
+            <span class="why-card__ic why-card__ic--blue"><svg class="ic" aria-hidden="true"><use href="#i-map-pin"></use></svg></span>
+            <h3>A clean, welcoming clinic</h3>
+            <p>A calm, thoughtfully designed Jacksonville office where children feel safe and parents feel at ease.</p>
+          </article>
+          <article class="why-card reveal" data-reveal>
+            <span class="why-card__ic why-card__ic--mango"><svg class="ic" aria-hidden="true"><use href="#i-growth"></use></svg></span>
+            <h3>Infancy through adolescence</h3>
+            <p>One trusted pediatrician who grows with your child &mdash; from the newborn days to the teenage years.</p>
+          </article>
+          <article class="why-card reveal" data-reveal>
+            <span class="why-card__ic why-card__ic--coral"><svg class="ic" aria-hidden="true"><use href="#i-heart"></use></svg></span>
+            <h3>Care that knows the whole child</h3>
+            <p>Because continuity matters &mdash; we remember your child&rsquo;s story, not just their last visit.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- Testimonials                                                  -->
+    <!-- ============================================================= -->
+    <section class="section testimonials" id="testimonials" aria-labelledby="tst-title">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow eyebrow--center" data-reveal>In parents&rsquo; words</p>
+          <h2 class="section-title" id="tst-title" data-reveal>Loved by the families she cares for.</h2>
+        </div>
+
+        <div class="testimonial-feature reveal" data-reveal>
+          <span class="testimonial-feature__quote" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-quote"></use></svg></span>
+          <div class="testimonial-feature__stars" aria-label="Five star review">
+            <svg class="ic" aria-hidden="true"><use href="#i-star"></use></svg>
+            <svg class="ic" aria-hidden="true"><use href="#i-star"></use></svg>
+            <svg class="ic" aria-hidden="true"><use href="#i-star"></use></svg>
+            <svg class="ic" aria-hidden="true"><use href="#i-star"></use></svg>
+            <svg class="ic" aria-hidden="true"><use href="#i-star"></use></svg>
+          </div>
+          <blockquote>
+            &ldquo;A wonderful doctor &mdash; extremely intelligent, with an incredible memory. She takes the time
+            to think through issues and is thorough in her execution. She&rsquo;s holistic in her approach and
+            takes the least intrusive path.&rdquo;
+          </blockquote>
+          <p class="testimonial-feature__by">&mdash; Verified patient review</p>
+        </div>
+
+        <div class="tst-meta">
+          <div class="tst-meta__card reveal" data-reveal>
+            <span class="tst-meta__num">75+</span>
+            <span class="tst-meta__label">Patient reviews across trusted physician directories</span>
+          </div>
+          <div class="tst-meta__card reveal" data-reveal>
+            <span class="tst-meta__stars">
+              <svg class="ic" aria-hidden="true"><use href="#i-star"></use></svg>
+              <svg class="ic" aria-hidden="true"><use href="#i-star"></use></svg>
+              <svg class="ic" aria-hidden="true"><use href="#i-star"></use></svg>
+              <svg class="ic" aria-hidden="true"><use href="#i-star"></use></svg>
+              <svg class="ic" aria-hidden="true"><use href="#i-star"></use></svg>
+            </span>
+            <span class="tst-meta__label">&ldquo;Highly recommended&rdquo; by families on US&nbsp;News physician ratings</span>
+          </div>
+          <div class="tst-meta__card tst-meta__card--invite reveal" data-reveal>
+            <span class="tst-meta__ic"><svg class="ic" aria-hidden="true"><use href="#i-heart"></use></svg></span>
+            <p>Are you a Mango family? We&rsquo;d love to share your story here.</p>
+            <a class="link-arrow" href="#contact">Share your experience <svg class="ic" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- Resources                                                     -->
+    <!-- ============================================================= -->
+    <section class="section resources" id="resources" aria-labelledby="res-title">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow eyebrow--center" data-reveal>Parent resource hub</p>
+          <h2 class="section-title" id="res-title" data-reveal>Helpful answers, right when you need them.</h2>
+          <p class="section-sub" data-reveal>Trusted, family&#8209;friendly tools and references &mdash; because parenting questions rarely wait for office hours.</p>
+        </div>
+        <div class="card-grid card-grid--3 resources__grid">
+          <a class="resource-card reveal" data-reveal href="#contact">
+            <span class="resource-card__ic"><svg class="ic" aria-hidden="true"><use href="#i-compass"></use></svg></span>
+            <h3>Symptom Checker</h3>
+            <p>Understand what your child&rsquo;s symptoms may mean and when to reach out.</p>
+            <span class="resource-card__go"><svg class="ic" aria-hidden="true"><use href="#i-arrow"></use></svg></span>
+          </a>
+          <a class="resource-card reveal" data-reveal href="#contact">
+            <span class="resource-card__ic"><svg class="ic" aria-hidden="true"><use href="#i-pill"></use></svg></span>
+            <h3>Medicine Dosages</h3>
+            <p>Weight&#8209;based dosing guidance for common children&rsquo;s medications.</p>
+            <span class="resource-card__go"><svg class="ic" aria-hidden="true"><use href="#i-arrow"></use></svg></span>
+          </a>
+          <a class="resource-card reveal" data-reveal href="#contact">
+            <span class="resource-card__ic"><svg class="ic" aria-hidden="true"><use href="#i-pulse"></use></svg></span>
+            <h3>What&rsquo;s Going Around?</h3>
+            <p>Stay ahead of the illnesses circulating in the Jacksonville community.</p>
+            <span class="resource-card__go"><svg class="ic" aria-hidden="true"><use href="#i-arrow"></use></svg></span>
+          </a>
+          <a class="resource-card reveal" data-reveal href="#contact">
+            <span class="resource-card__ic"><svg class="ic" aria-hidden="true"><use href="#i-book"></use></svg></span>
+            <h3>Medical Library</h3>
+            <p>Physician&#8209;reviewed articles on childhood health, growth, and wellness.</p>
+            <span class="resource-card__go"><svg class="ic" aria-hidden="true"><use href="#i-arrow"></use></svg></span>
+          </a>
+          <a class="resource-card reveal" data-reveal href="#contact">
+            <span class="resource-card__ic"><svg class="ic" aria-hidden="true"><use href="#i-calendar"></use></svg></span>
+            <h3>Immunization Schedule</h3>
+            <p>A clear, up&#8209;to&#8209;date vaccine timeline for every age and stage.</p>
+            <span class="resource-card__go"><svg class="ic" aria-hidden="true"><use href="#i-arrow"></use></svg></span>
+          </a>
+          <a class="resource-card reveal" data-reveal href="#contact">
+            <span class="resource-card__ic"><svg class="ic" aria-hidden="true"><use href="#i-link"></use></svg></span>
+            <h3>Helpful Links</h3>
+            <p>Curated, trustworthy resources for parents &mdash; forms, references, and more.</p>
+            <span class="resource-card__go"><svg class="ic" aria-hidden="true"><use href="#i-arrow"></use></svg></span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- Contact / Location / Hours                                    -->
+    <!-- ============================================================= -->
+    <section class="section contact" id="contact" aria-labelledby="contact-title">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow eyebrow--center" data-reveal>Let&rsquo;s meet</p>
+          <h2 class="section-title" id="contact-title" data-reveal>Book your complimentary meet &amp; greet.</h2>
+          <p class="section-sub" data-reveal>
+            The best way to know if Mango Pediatrics is right for your family is to meet Dr.&nbsp;Azam.
+            There&rsquo;s no cost and no obligation &mdash; just a warm conversation about your child&rsquo;s care.
+          </p>
+        </div>
+
+        <div class="contact__grid">
+          <!-- Info + hours -->
+          <div class="contact__info reveal" data-reveal>
+            <div class="info-block">
+              <span class="info-block__ic"><svg class="ic" aria-hidden="true"><use href="#i-map-pin"></use></svg></span>
+              <div>
+                <h3>Visit us</h3>
+                <p id="address-text">6789 Southpoint Parkway, Suite 202<br/>Jacksonville, FL 32216</p>
+                <div class="info-block__actions">
+                  <a class="link-arrow" href="https://www.google.com/maps/search/?api=1&amp;query=6789+Southpoint+Parkway+Suite+202+Jacksonville+FL+32216" target="_blank" rel="noopener">Open in Maps <svg class="ic" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
+                  <button class="chip-btn" type="button" data-copy="6789 Southpoint Parkway, Suite 202, Jacksonville, FL 32216"><svg class="ic" aria-hidden="true"><use href="#i-copy"></use></svg> Copy address</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="info-block">
+              <span class="info-block__ic"><svg class="ic" aria-hidden="true"><use href="#i-phone"></use></svg></span>
+              <div>
+                <h3>Call or text</h3>
+                <p><a class="info-link" href="tel:+19048531763">904&#8209;853&#8209;1763</a></p>
+                <p class="info-block__note">Members reach Dr.&nbsp;Azam directly &mdash; by phone, text, or email.</p>
+              </div>
+            </div>
+
+            <div class="info-block">
+              <span class="info-block__ic"><svg class="ic" aria-hidden="true"><use href="#i-clock"></use></svg></span>
+              <div>
+                <h3>Office hours</h3>
+                <table class="hours" aria-label="Office hours">
+                  <tbody>
+                    <tr><th scope="row">Monday</th><td>9:00 AM &ndash; 5:00 PM</td></tr>
+                    <tr><th scope="row">Tuesday</th><td>9:00 AM &ndash; 6:00 PM</td></tr>
+                    <tr><th scope="row">Wednesday</th><td class="hours__closed">Closed</td></tr>
+                    <tr><th scope="row">Thursday</th><td>12:00 PM &ndash; 7:00 PM</td></tr>
+                    <tr><th scope="row">Friday</th><td>9:00 AM &ndash; 5:00 PM</td></tr>
+                    <tr><th scope="row">Saturday</th><td>8:00 AM &ndash; 1:00 PM <span class="hours__alt">(alternating)</span></td></tr>
+                    <tr><th scope="row">Sunday</th><td class="hours__closed">Closed</td></tr>
+                  </tbody>
+                </table>
+                <p class="info-block__note">Evening &amp; weekend visits available &mdash; because childhood doesn&rsquo;t keep office hours.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Form + map -->
+          <div class="contact__panel reveal" data-reveal>
+            <div class="contact-map" aria-hidden="true">
+              <svg viewBox="0 0 480 180" preserveAspectRatio="xMidYMid slice" class="contact-map__svg">
+                <rect width="480" height="180" fill="#EAF4EC"/>
+                <path d="M0 60h480M0 120h480M120 0v180M300 0v180M400 0v180" stroke="#D6E8DA" stroke-width="6"/>
+                <path d="M0 30c120 10 200 60 480 30" stroke="#CFE6F0" stroke-width="10" fill="none"/>
+                <rect x="60" y="70" width="70" height="46" rx="6" fill="#DCEFE0"/>
+                <rect x="330" y="24" width="80" height="40" rx="6" fill="#DCEFE0"/>
+                <rect x="150" y="130" width="90" height="36" rx="6" fill="#DCEFE0"/>
+                <g transform="translate(290 84)">
+                  <path d="M0 0c14-16 24-26 24-42A24 24 0 1 0-24-42C-24-26-14-16 0 0z" fill="#F2631B"/>
+                  <circle cx="0" cy="-42" r="9" fill="#fff"/>
+                </g>
+              </svg>
+              <a class="contact-map__link" href="https://www.google.com/maps/search/?api=1&amp;query=6789+Southpoint+Parkway+Suite+202+Jacksonville+FL+32216" target="_blank" rel="noopener">
+                <svg class="ic" aria-hidden="true"><use href="#i-map-pin"></use></svg> Southpoint Parkway, Jacksonville &mdash; open map
+              </a>
+            </div>
+
+            <form class="contact-form" id="contact-form" novalidate>
+              <p class="contact-form__title">Request your meet &amp; greet</p>
+              <div class="field">
+                <label for="cf-name">Parent / guardian name</label>
+                <input id="cf-name" name="name" type="text" autocomplete="name" required placeholder="Jane Appleseed" />
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label for="cf-email">Email</label>
+                  <input id="cf-email" name="email" type="email" autocomplete="email" required placeholder="jane@email.com" />
+                </div>
+                <div class="field">
+                  <label for="cf-phone">Phone</label>
+                  <input id="cf-phone" name="phone" type="tel" autocomplete="tel" placeholder="(904) 555&#8209;0123" />
+                </div>
+              </div>
+              <div class="field">
+                <label for="cf-child">Child&rsquo;s age <span class="field__opt">(optional)</span></label>
+                <input id="cf-child" name="child" type="text" placeholder="e.g. 4 months, 6 years" />
+              </div>
+              <div class="field">
+                <label for="cf-msg">How can we help? <span class="field__opt">(optional)</span></label>
+                <textarea id="cf-msg" name="message" rows="3" placeholder="Tell us a little about your family and what you&rsquo;re looking for."></textarea>
+              </div>
+              <button class="btn btn--primary btn--block btn--lg" type="submit">Request meet &amp; greet</button>
+              <p class="contact-form__fine">Prefer to talk now? <a href="tel:+19048531763">Call or text 904&#8209;853&#8209;1763</a>. We&rsquo;ll never share your information.</p>
+              <p class="contact-form__success" id="form-success" role="status" hidden>
+                <svg class="ic" aria-hidden="true"><use href="#i-check"></use></svg>
+                Thank you! Your request is in &mdash; we&rsquo;ll reach out shortly to schedule your visit.
+              </p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- Final CTA band                                                -->
+    <!-- ============================================================= -->
+    <section class="cta-band" aria-labelledby="cta-band-title">
+      <div class="wrap cta-band__inner">
+        <span class="cta-band__leaf cta-band__leaf--1" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-leaf"></use></svg></span>
+        <span class="cta-band__leaf cta-band__leaf--2" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-mango"></use></svg></span>
+        <h2 id="cta-band-title">Your child deserves a pediatrician who has the time.</h2>
+        <p>Join a small circle of Jacksonville families who never feel rushed. Meet Dr.&nbsp;Azam &mdash; it&rsquo;s on us.</p>
+        <div class="cta-band__actions">
+          <a class="btn btn--light btn--lg" href="#contact">Schedule a free meet &amp; greet</a>
+          <a class="btn btn--outline-light btn--lg" href="tel:+19048531763"><svg class="ic" aria-hidden="true"><use href="#i-phone"></use></svg> 904&#8209;853&#8209;1763</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============================================================= -->
+  <!-- Footer                                                        -->
+  <!-- ============================================================= -->
+  <footer class="site-footer" id="site-footer">
+    <div class="wrap site-footer__grid">
+      <div class="site-footer__brand">
+        <a class="brand brand--footer" href="#top" aria-label="Mango Pediatrics home">
+          <span class="brand__mark" aria-hidden="true">
+            <svg viewBox="0 0 44 44" width="40" height="40">
+              <circle cx="22" cy="22" r="22" fill="#FFF3DE"/>
+              <path d="M30 14.5c3.2 2.3 4.4 6.8 2.9 10.7-1.7 4.4-6.3 7.4-10.9 7-4.2-.4-7.9-3.6-8.4-7.8-.6-4.8 2.6-9.6 7.3-10.9 2.9-.8 6.2-.3 9.1 1z" fill="url(#brandMango)"/>
+              <path d="M27.6 12.7c.7-2 2.6-3.4 4.8-3.5-.1 2.2-1.4 4.1-3.4 5" fill="none" stroke="#4E9B5E" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="brand__text"><span class="brand__name brand__name--light">Mango<span>Pediatrics</span></span></span>
+        </a>
+        <p class="site-footer__blurb">Boutique concierge pediatric care in Jacksonville, Florida &mdash; unhurried, integrative, and built around your family.</p>
+        <a class="btn btn--primary" href="#contact">Schedule a meet &amp; greet</a>
+      </div>
+
+      <nav class="site-footer__col" aria-label="Explore">
+        <h4>Explore</h4>
+        <ul>
+          <li><a href="#care">Care Model</a></li>
+          <li><a href="#services">Services</a></li>
+          <li><a href="#doctor">Meet Dr. Azam</a></li>
+          <li><a href="#why">Why Mango</a></li>
+          <li><a href="#testimonials">Parents</a></li>
+        </ul>
+      </nav>
+
+      <nav class="site-footer__col" aria-label="Services">
+        <h4>Services</h4>
+        <ul>
+          <li><a href="#services">Well Checks</a></li>
+          <li><a href="#services">Sick Visits</a></li>
+          <li><a href="#services">Telehealth</a></li>
+          <li><a href="#services">Newborn Care</a></li>
+          <li><a href="#services">Immunizations</a></li>
+          <li><a href="#services">Behavioral Health</a></li>
+        </ul>
+      </nav>
+
+      <nav class="site-footer__col" aria-label="Resources">
+        <h4>Resources</h4>
+        <ul>
+          <li><a href="#resources">Symptom Checker</a></li>
+          <li><a href="#resources">Medicine Dosages</a></li>
+          <li><a href="#resources">What&rsquo;s Going Around?</a></li>
+          <li><a href="#resources">Medical Library</a></li>
+          <li><a href="#resources">Immunization Schedule</a></li>
+        </ul>
+      </nav>
+
+      <div class="site-footer__col site-footer__contact">
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="tel:+19048531763"><svg class="ic" aria-hidden="true"><use href="#i-phone"></use></svg> 904&#8209;853&#8209;1763</a></li>
+          <li><a href="https://www.google.com/maps/search/?api=1&amp;query=6789+Southpoint+Parkway+Suite+202+Jacksonville+FL+32216" target="_blank" rel="noopener"><svg class="ic" aria-hidden="true"><use href="#i-map-pin"></use></svg> 6789 Southpoint Pkwy, Ste 202<br/><span class="site-footer__indent">Jacksonville, FL 32216</span></a></li>
+          <li><span class="site-footer__hours"><svg class="ic" aria-hidden="true"><use href="#i-clock"></use></svg> Mon&ndash;Fri &amp; alternating Sat</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="wrap site-footer__bottom">
+      <p>&copy; <span id="year">2026</span> Mango Pediatrics. All rights reserved.</p>
+      <ul class="site-footer__legal">
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Notice of Privacy Practices</a></li>
+        <li><a href="#">Accessibility</a></li>
+        <li><a href="#">Disclaimer</a></li>
+      </ul>
+    </div>
+    <p class="wrap site-footer__disclaimer">The content on this website is for general informational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment. For a medical emergency, call 911.</p>
+  </footer>
+
+  <!-- Back to top -->
+  <button class="to-top" id="to-top" aria-label="Back to top" hidden>
+    <svg class="ic" aria-hidden="true" style="transform:rotate(-90deg)"><use href="#i-arrow"></use></svg>
+  </button>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="assets/js/main.js" defer></script>
 </body>
 </html>

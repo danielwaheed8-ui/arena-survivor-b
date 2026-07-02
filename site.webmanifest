@@ -1,0 +1,12 @@
+{
+  "name": "Mango Pediatrics",
+  "short_name": "Mango Peds",
+  "description": "Concierge pediatric care in Jacksonville, FL with Dr. Rubina Azam, MD.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFFBF4",
+  "theme_color": "#FF7A1A",
+  "icons": [
+    { "src": "assets/img/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
